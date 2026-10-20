@@ -191,28 +191,32 @@ def _read_queue(service, file_id: str) -> dict:
     done = False
     while not done:
         _, done = downloader.next_chunk()
-    job = json.loads(buffer.getvalue().decode("utf-8"))
+    raw = buffer.getvalue()
+    job = json.loads(raw.decode("utf-8"))
     if not isinstance(job, dict):
         raise ValueError("Queue content must be a JSON object")
     name = job.get("scientific_name")
     request_id = _safe_id(job.get("request_id", ""))
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", name.strip()):
         raise ValueError("scientific_name is missing or invalid")
-    return {"scientific_name": name.strip(), "request_id": request_id}
+    return {
+        "scientific_name": name.strip(),
+        "request_id": request_id,
+        "queue_fingerprint": hashlib.sha256(raw).hexdigest()[:12],
+    }
 
 
-def _write_packet(service, folder_id: str, request_id: str, packet: dict) -> None:
+def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict) -> None:
     from googleapiclient.http import MediaIoBaseUpload
-    name = f"RESEARCH_PACKET_{request_id}.json"
+    name = f"RESEARCH_PACKET_{request_id}_{queue_fingerprint}.json"
     query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
     existing = service.files().list(q=query, pageSize=10, fields="files(id)").execute().get("files", [])
+    if existing:
+        return
     media = MediaIoBaseUpload(io.BytesIO(json.dumps(packet, ensure_ascii=False, indent=2).encode()),
                               mimetype="application/json", resumable=False)
-    if existing:
-        service.files().update(fileId=existing[0]["id"], media_body=media).execute()
-    else:
-        service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
-                               media_body=media, fields="id").execute()
+    service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
+                           media_body=media, fields="id").execute()
 
 
 def main() -> int:
@@ -220,7 +224,9 @@ def main() -> int:
         service = _drive_service()
         job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
         packet = build_packet(job["scientific_name"], job["request_id"])
-        _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"], packet)
+        packet["queue_fingerprint"] = job["queue_fingerprint"]
+        _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
+                      job["queue_fingerprint"], packet)
     except Exception as exc:
         print(f"RESEARCH_BLOCKED: {type(exc).__name__}; private details redacted", file=sys.stderr)
         return 2
