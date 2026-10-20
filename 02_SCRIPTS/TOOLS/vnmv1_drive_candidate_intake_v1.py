@@ -136,7 +136,7 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
         result = ingest(args.folder_id, Path(args.out), Path(args.state) if args.state else None)
-    except (RuntimeError, OSError, ValueError, json.JSONDecodeError) as exc:
+    except Exception as exc:
         print(f"BLOCKED: {type(exc).__name__}; private details redacted", file=sys.stderr)
         return 2
     print("INTAKE_SCAN_COMPLETED")
