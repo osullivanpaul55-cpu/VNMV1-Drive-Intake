@@ -9,7 +9,9 @@ A small public-code runner that checks a private Google Drive inbox. It contains
 - Uses read-only Drive access for candidate intake and keeps temporary downloads on the runner.
 - A separate research job checks a private Drive queue every 15 minutes or on manual dispatch. It queries GBIF, iNaturalist, and Wikimedia Commons for taxonomy and licensed-photo metadata, then writes a source-linked JSON packet to private Drive.
 - Research photos are candidate references. Taxon matches and community identifications are not treated as confirmed specimen identifications.
+- Each research packet carries a two-look comparison record and a 12-image plan: six named views for LOOK-A and six for LOOK-B. Visual review must fill both appearance records before generation; age or exuvia condition is never inferred from metadata.
 - Neither workflow publishes candidate images, filenames, Drive IDs, manifests, or research packets as repository artifacts.
+- The intake naming rules accept six views: FRONT, SIDE, REAR, OBLIQUE, TOP_DOWN, and WALKING_AWAY.
 - The runner does not invoke built-in ChatGPT ImageGen. ChatGPT must inspect the reference photos, prepare the generation prompt, and run/refine ImageGen in a ChatGPT session.
 
 ## One-time setup
