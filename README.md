@@ -1,27 +1,28 @@
 # VNMV1 Drive Intake
 
-A small public-code runner that checks one private Google Drive image inbox. It contains no specimen images, species research, private card inputs, or service-account key.
+A small public-code runner that checks a private Google Drive inbox. It contains no specimen images, private card inputs, or service-account key.
 
 ## What it does
 
-- Checks the configured Drive folder every five minutes, or on manual dispatch.
+- Checks the configured candidate-image Drive folder every five minutes.
 - Accepts only the Card 0001 candidate image and JSON-sidecar naming pattern enforced by the intake script.
-- Uses a read-only Drive scope and downloads matching candidates only into the temporary GitHub-hosted runner while it computes hashes.
-- Keeps a private deduplication cache of Drive file IDs and checksums; it does not cache image bytes.
-- Does not commit or upload candidate images, filenames, Drive IDs, manifests, or research inputs as GitHub artifacts.
-- Does not generate images or invoke ChatGPT ImageGen. Image generation and visual review remain in ChatGPT; use the Drive connector to review files that stay in the Drive inbox.
-
-The runner's temporary files are deleted when the GitHub job ends. Public workflows are configured for schedule and manual dispatch only; they do not run on pull requests.
+- Uses read-only Drive access for candidate intake and keeps temporary downloads on the runner.
+- A separate research job checks a private Drive queue every 15 minutes or on manual dispatch. It queries GBIF, iNaturalist, and Wikimedia Commons for taxonomy and licensed-photo metadata, then writes a source-linked JSON packet to private Drive.
+- Research photos are candidate references. Taxon matches and community identifications are not treated as confirmed specimen identifications.
+- Neither workflow publishes candidate images, filenames, Drive IDs, manifests, or research packets as repository artifacts.
+- The runner does not invoke built-in ChatGPT ImageGen. ChatGPT must inspect the reference photos, prepare the generation prompt, and run/refine ImageGen in a ChatGPT session.
 
 ## One-time setup
 
-1. Add a repository Actions secret named `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` containing a Google service-account JSON key. GitHub secrets from `VNMV1_CORE` do not transfer to this repository; GitHub does not reveal existing secret values. If you no longer have the original JSON key file, create a new key for the same service account in Google Cloud.
-2. Add repository variable `VNMV1_IMAGEGEN_DRIVE_FOLDER_ID` with the intake folder ID.
-3. Share only the intake folder with the service account's `client_email` as Viewer.
-4. Confirm Google Drive API is enabled for the service account's Cloud project.
+1. Keep `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` as a GitHub Actions secret.
+2. Add `VNMV1_RESEARCH_QUEUE_FILE_ID` and `VNMV1_RESEARCH_OUTPUT_FOLDER_ID` as GitHub Actions secrets. Keep the queue and output folders private.
+3. Share only the research queue/output folder with the service account's `client_email` as Editor. The research job needs to read the queue and write/update its packet. The existing image-intake folder can remain Viewer.
+4. Add a JSON queue file in the private Drive folder, for example:
+   `{"request_id":"card-0001-ind-1","scientific_name":"Abdomegaphobema mesomelas"}`
+5. Confirm the Google Drive API is enabled for that service account's Cloud project. Do not put queue contents or service-account keys in this public repository.
 
-Do not place key JSON files, images, sidecars, reference boards, or card research in this repository.
+The research job writes one `RESEARCH_PACKET_<request_id>_<queue-fingerprint>.json` per queue revision and skips revisions already processed. Edit the private queue JSON to request a fresh packet; use a new request_id for a new specimen/request. Do not put a specimen image, card export, or private reference board in the public repository.
 
-## Cost and privacy
+## Privacy and cost
 
-GitHub states standard hosted runners are free for public repositories. This workflow does not upload candidate artifacts. The actual Drive-to-runner access still depends on the secret and folder permission being correct. The Actions run log contains no filenames, file IDs, hashes, or image contents.
+The public Actions workflows do not run on pull requests. Research output is written to private Drive; GitHub logs contain only fixed status messages and never print queue content, species names, card IDs, Drive IDs, or images. GitHub-hosted standard runners are free for public repositories. The built-in ChatGPT ImageGen tool is available in ChatGPT, not as a callable GitHub Actions service.
