@@ -21,7 +21,7 @@ A small public-code runner that checks a private Google Drive inbox. It contains
    `{"request_id":"card-0001-ind-1","scientific_name":"Abdomegaphobema mesomelas"}`
 5. Confirm the Google Drive API is enabled for that service account's Cloud project. Do not put queue contents or service-account keys in this public repository.
 
-The research job replaces `RESEARCH_PACKET_<request_id>.json` when rerun. Use a new request_id when you want a new packet. Do not put a specimen image, card export, or private reference board in the public repository.
+The research job writes one `RESEARCH_PACKET_<request_id>_<queue-fingerprint>.json` per queue revision and skips revisions already processed. Edit the private queue JSON to request a fresh packet; use a new request_id for a new specimen/request. Do not put a specimen image, card export, or private reference board in the public repository.
 
 ## Privacy and cost
 
