@@ -128,6 +128,12 @@ def build_packet(name: str, request_id: str) -> dict:
     exact = next((taxon for taxon in taxa if taxon["is_exact_name"]), None)
     photos = inat_photo_candidates(exact["taxon_id"]) if exact and exact.get("taxon_id") else []
     commons = commons_candidates(name)
+    views = ["FRONT", "SIDE", "REAR", "OBLIQUE", "TOP_DOWN", "WALKING_AWAY"]
+    look_ids = ["LOOK-A", "LOOK-B"]
+    pose_assignments = [
+        {"look_id": look_id, "view": view, "status": "NOT_GENERATED"}
+        for look_id in look_ids for view in views
+    ]
     return {
         "schema": "VNMV1_SPECIES_RESEARCH_PACKET_V1",
         "request_id": request_id,
@@ -146,14 +152,37 @@ def build_packet(name: str, request_id: str) -> dict:
             "reuse_note": "Confirm image identity, license, attribution, source page, and reuse terms before use.",
         },
         "image_analysis_status": "NOT_ANALYSED_BY_VISION_MODEL",
+        "specimen_appearance_pair": {
+            "status": "UNASSESSED_REQUIRES_VISUAL_REVIEW",
+            "species_name": name,
+            "appearance_groups": [
+                {
+                    "look_id": look_id,
+                    "age_or_condition": "UNASSESSED",
+                    "visual_notes": None,
+                    "supporting_reference_ids": [],
+                    "review_status": "UNASSIGNED",
+                }
+                for look_id in look_ids
+            ],
+            "comparison_rule": "Assign two looks only after visual source review. Describe age, molt/exuvia state, wear, or freshness only when evidence supports it.",
+        },
+        "pose_plan": {
+            "target_image_count": 12,
+            "looks": 2,
+            "views_per_look": len(views),
+            "view_ids": views,
+            "assignments": pose_assignments,
+            "consistency_rule": "Keep each look identity stable across its six views; keep the two looks distinct from each other.",
+        },
         "generation_handoff": {
             "status": "READY_FOR_CHATGPT_REVIEW",
             "species_name": name,
             "required_next_steps": [
                 "Inspect reference images and reject wrong taxa or unsuitable views.",
                 "Record visible proportions, color, hair density, texture, and specimen condition with source links.",
-                "Keep distinct specimen appearances separate unless sources support the difference.",
-                "Use accepted references to prepare an ImageGen request, then review and refine the output.",
+                "Fill the LOOK-A and LOOK-B evidence fields from visually reviewed references; never infer age or exuvia condition from name metadata.",
+                "Generate six views for each accepted look, preserving each look consistently across its views, then review and refine each result.",
             ],
             "automatic_image_generation": "BUILT_IN_CHATGPT_IMAGEGEN_CANNOT_BE_INVOKED_BY_GITHUB_ACTIONS",
         },
