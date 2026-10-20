@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 NAME_RE = re.compile(
-    r"^CARD-0001__(?:IND-1|IND-2)__(?:REAR|SIDE|WALKING_AWAY|TOP_DOWN|OBLIQUE)__v[0-9]{2,}\.(?:png|jpe?g|webp|json)$",
+    r"^CARD-0001__(?:IND-1|IND-2)__(?:FRONT|REAR|SIDE|WALKING_AWAY|TOP_DOWN|OBLIQUE)__v[0-9]{2,}\.(?:png|jpe?g|webp|json)$",
     re.IGNORECASE,
 )
 IMAGE_MIMES = {"image/png", "image/jpeg", "image/webp"}

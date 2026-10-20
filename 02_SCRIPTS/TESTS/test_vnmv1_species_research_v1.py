@@ -51,6 +51,10 @@ class SpeciesResearchTests(unittest.TestCase):
         self.assertEqual(packet["image_analysis_status"], "NOT_ANALYSED_BY_VISION_MODEL")
         self.assertIn("CANNOT_BE_INVOKED", packet["generation_handoff"]["automatic_image_generation"])
         self.assertEqual(packet["reference_photos"]["photo_count"], 0)
+        self.assertEqual(packet["pose_plan"]["target_image_count"], 12)
+        self.assertEqual(packet["pose_plan"]["views_per_look"], 6)
+        self.assertEqual(len(packet["pose_plan"]["assignments"]), 12)
+        self.assertEqual(len(packet["specimen_appearance_pair"]["appearance_groups"]), 2)
 
 
 if __name__ == "__main__":
