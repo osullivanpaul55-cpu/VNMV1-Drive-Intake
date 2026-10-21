@@ -238,6 +238,15 @@ def _read_queue(service, file_id: str) -> dict:
 def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict, set_stage) -> None:
     from googleapiclient.http import MediaIoBaseUpload
     name = f"RESEARCH_PACKET_{request_id}_{queue_fingerprint}.json"
+    set_stage("output_folder_metadata_check")
+    folder = service.files().get(fileId=folder_id,
+        fields="mimeType,driveId,capabilities(canAddChildren)", supportsAllDrives=True).execute()
+    can_add_children = (folder.get("capabilities") or {}).get("canAddChildren")
+    print("OUTPUT_FOLDER_CHECK: accessible=true; is_folder="
+          + str(folder.get("mimeType") == "application/vnd.google-apps.folder").lower()
+          + "; can_add_children=" + str(can_add_children).lower()
+          + "; shared_drive=" + str(bool(folder.get("driveId")).lower())
+          )
     query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
     set_stage("output_folder_lookup")
     existing = service.files().list(q=query, pageSize=10, fields="files(id)").execute().get("files", [])
