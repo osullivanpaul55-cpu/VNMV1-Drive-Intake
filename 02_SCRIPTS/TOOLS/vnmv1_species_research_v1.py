@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a private, source-linked species research packet from a Drive queue."""
+"""Build a source-linked species research packet from a private Drive queue."""
 from __future__ import annotations
 
 import hashlib
