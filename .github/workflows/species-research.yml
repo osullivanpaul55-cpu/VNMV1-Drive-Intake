@@ -1,6 +1,11 @@
 name: Species research queue
 
 on:
+  push:
+    paths:
+      - ".github/workflows/species-research.yml"
+      - "02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py"
+      - "02_SCRIPTS/TESTS/test_vnmv1_species_research_v1.py"
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
