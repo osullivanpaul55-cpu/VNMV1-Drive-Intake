@@ -289,12 +289,20 @@ def main() -> int:
         _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
                       job["queue_fingerprint"], packet, set_stage)
     except Exception as exc:
-        # Report only a coarse stage and HTTP status/type. Never log IDs, names,
-        # credentials, request URLs, or Google API response bodies.
+        # Report only a coarse stage, HTTP status/type, and an allowlisted OAuth
+        # error code. Never log IDs, names, credentials, URLs, or response bodies.
         status = getattr(getattr(exc, "resp", None), "status", None)
         if status is None:
             status = getattr(exc, "code", None)
         safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
+        if type(exc).__name__ == "RefreshError":
+            safe_detail = "OAUTH_REFRESH_REJECTED"
+            safe_args = " ".join(str(arg) for arg in getattr(exc, "args", ())).lower()
+            for code in ("invalid_grant", "invalid_client", "unauthorized_client",
+                         "invalid_scope", "access_denied", "invalid_request"):
+                if code in safe_args:
+                    safe_detail = f"OAUTH_{code.upper()}"
+                    break
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
