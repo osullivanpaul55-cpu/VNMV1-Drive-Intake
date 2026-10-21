@@ -191,16 +191,33 @@ def build_packet(name: str, request_id: str) -> dict:
 
 
 def _drive_service():
-    raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "")
-    if not raw:
-        raise RuntimeError("Drive service-account secret is missing")
-    try:
-        info = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("Drive service-account secret is invalid") from exc
-    from google.oauth2.service_account import Credentials
+    oauth_client_id = os.environ.get("GDRIVE_OAUTH_CLIENT_ID", "").strip()
+    oauth_client_secret = os.environ.get("GDRIVE_OAUTH_CLIENT_SECRET", "").strip()
+    oauth_refresh_token = os.environ.get("GDRIVE_OAUTH_REFRESH_TOKEN", "").strip()
     from googleapiclient.discovery import build
-    creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+
+    if oauth_client_id and oauth_client_secret and oauth_refresh_token:
+        # OAuth writes into the authenticated person's My Drive and uses their
+        # Drive quota, which is required for personal Gmail accounts.
+        from google.oauth2.credentials import Credentials
+        creds = Credentials(
+            token=None,
+            refresh_token=oauth_refresh_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=oauth_client_id,
+            client_secret=oauth_client_secret,
+            scopes=SCOPES,
+        )
+    else:
+        raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "")
+        if not raw:
+            raise RuntimeError("Google Drive OAuth credentials or service-account JSON are required")
+        try:
+            info = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Drive service-account secret is invalid") from exc
+        from google.oauth2.service_account import Credentials
+        creds = Credentials.from_service_account_info(info, scopes=SCOPES)
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
