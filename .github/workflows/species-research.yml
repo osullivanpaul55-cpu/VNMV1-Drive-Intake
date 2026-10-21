@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: vnmv1-species-research
@@ -21,19 +22,11 @@ jobs:
         id: config
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
-          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
-          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
-          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
-          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: |
-          oauth_configured=false
-          if [[ -n "$DRIVE_OAUTH_CLIENT_ID" && -n "$DRIVE_OAUTH_CLIENT_SECRET" && -n "$DRIVE_OAUTH_REFRESH_TOKEN" ]]; then
-            oauth_configured=true
-          fi
-          if [[ ( -z "$DRIVE_SERVICE_ACCOUNT_JSON" && "$oauth_configured" != "true" ) || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$RESEARCH_OUTPUT_FOLDER_ID" ]]; then
+          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" ]]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Private research queue is not configured."
+            echo "::notice::Private Drive queue is not configured."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -62,17 +55,24 @@ jobs:
         if: steps.config.outputs.configured == 'true'
         run: python -m pip install --disable-pip-version-check --quiet -r requirements.txt
 
-      - name: Build and save a private research packet
+      - name: Research the next queued species
+        id: research
         if: steps.config.outputs.configured == 'true'
         env:
-          # Use the owner's OAuth identity and quota; service-account auth cannot own My Drive files.
-          GDRIVE_SERVICE_ACCOUNT_JSON: ""
-          GDRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
-          GDRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
-          GDRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
-          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
+
+      - name: Upload public research packet
+        if: steps.config.outputs.configured == 'true' && steps.research.outputs.upload == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.research.outputs.artifact_name }}
+          path: research-output/*.json
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Report run without private identifiers
         if: always()
@@ -80,6 +80,6 @@ jobs:
           {
             echo "## Species research queue"
             echo
-            echo "Research packets stay in private Drive. Species names, card identifiers, image files, and packet contents are not published in this public repository."
-            echo "ChatGPT must inspect the reference images and run ImageGen in a ChatGPT session."
+            echo "The public artifact contains species research and source links. Queue/card request identifiers and image files are omitted. Anyone can download it; it expires after 90 days."
+            echo "Reference photos still need visual review, and image generation must be run in a ChatGPT session."
           } >> "$GITHUB_STEP_SUMMARY"
