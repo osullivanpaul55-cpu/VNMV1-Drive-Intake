@@ -161,6 +161,10 @@ def build_packet(name: str, request_id: str, specimen_context: dict | None = Non
             "original_drive_file_id": specimen_context.get("original_drive_file_id"),
             "original_sha256": specimen_context.get("original_sha256"),
             "original_filename": specimen_context.get("original_filename"),
+            "original_manifest_status": specimen_context.get("original_status"),
+            "original_match_method": specimen_context.get("original_match_method"),
+            "original_match_confidence": specimen_context.get("original_match_confidence"),
+            "taxon_input_status": specimen_context.get("identity_input_status", "UNASSESSED_CANDIDATE_INPUT"),
             "sex_default": "FEMALE",
             "sex_default_basis": "USER_ASSUMPTION_FOR_PACKETING",
             "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
@@ -283,6 +287,10 @@ def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
             "original_drive_file_id": original_drive_file_id,
             "original_sha256": original_sha256,
             "original_filename": job.get("original_filename"),
+            "original_status": job.get("original_status"),
+            "original_match_method": job.get("original_match_method"),
+            "original_match_confidence": job.get("original_match_confidence"),
+            "identity_input_status": job.get("identity_input_status", "UNASSESSED_CANDIDATE_INPUT"),
             "queue_fingerprint": hashlib.sha256(
                 json.dumps(job, sort_keys=True, ensure_ascii=False).encode("utf-8")
             ).hexdigest()[:12],
