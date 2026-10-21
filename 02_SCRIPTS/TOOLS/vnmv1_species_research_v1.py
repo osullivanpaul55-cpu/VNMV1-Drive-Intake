@@ -247,7 +247,7 @@ def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: s
                               mimetype="application/json", resumable=False)
     set_stage("packet_create")
     service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
-                           media_body=media, fields="id").execute()
+                           media_body=media, fields="id", supportsAllDrives=True).execute()
 
 
 def main() -> int:
