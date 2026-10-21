@@ -122,14 +122,19 @@ def commons_candidates(name: str) -> list[dict]:
     return candidates[:MAX_PHOTOS]
 
 
-def build_packet(name: str, request_id: str) -> dict:
+def build_packet(name: str, request_id: str, specimen_context: dict | None = None) -> dict:
     gbif = gbif_match(name)
     taxa = inat_taxa(name)
     exact = next((taxon for taxon in taxa if taxon["is_exact_name"]), None)
     photos = inat_photo_candidates(exact["taxon_id"]) if exact and exact.get("taxon_id") else []
     commons = commons_candidates(name)
     views = ["FRONT", "SIDE", "REAR", "OBLIQUE", "TOP_DOWN", "WALKING_AWAY"]
-    look_ids = ["LOOK-A", "LOOK-B"]
+    look_defs = [
+        {"look_id": "YOUNGER_FEMALE", "label": "Younger/juvenile female study track", "life_stage": "YOUNG_OR_JUVENILE"},
+        {"look_id": "OLDER_FEMALE", "label": "Older/adult female study track", "life_stage": "ADULT_OR_OLDER"},
+    ]
+    look_ids = [look["look_id"] for look in look_defs]
+    specimen_context = specimen_context or {}
     pose_assignments = [
         {"look_id": look_id, "view": view, "status": "NOT_GENERATED"}
         for look_id in look_ids for view in views
@@ -151,21 +156,46 @@ def build_packet(name: str, request_id: str) -> dict:
             "photo_count": len(photos) + len(commons),
             "reuse_note": "Confirm image identity, license, attribution, source page, and reuse terms before use.",
         },
+        "source_specimen": {
+            "card_id": specimen_context.get("card_id"),
+            "original_drive_file_id": specimen_context.get("original_drive_file_id"),
+            "original_sha256": specimen_context.get("original_sha256"),
+            "original_filename": specimen_context.get("original_filename"),
+            "sex_default": "FEMALE",
+            "sex_default_basis": "USER_ASSUMPTION_FOR_PACKETING",
+            "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
+            "photographed_individual_life_stage": "UNKNOWN_UNVERIFIED",
+            "original_image_embedded_in_public_packet": False,
+            "original_image_note": "Original remains in private Drive; this public packet records its source binding only.",
+        },
         "image_analysis_status": "NOT_ANALYSED_BY_VISION_MODEL",
         "specimen_appearance_pair": {
             "status": "UNASSESSED_REQUIRES_VISUAL_REVIEW",
             "species_name": name,
             "appearance_groups": [
                 {
-                    "look_id": look_id,
-                    "age_or_condition": "UNASSESSED",
+                    **look,
+                    "sex_for_study": "FEMALE_ASSUMED_BY_USER",
+                    "age_or_condition": look["life_stage"],
+                    "life_stage_status": "STUDY_CATEGORY_ONLY_RESEARCH_REQUIRED",
                     "visual_notes": None,
                     "supporting_reference_ids": [],
-                    "review_status": "UNASSIGNED",
+                    "review_status": "UNASSIGNED_REQUIRES_VISUAL_REVIEW",
                 }
-                for look_id in look_ids
+                for look in look_defs
             ],
-            "comparison_rule": "Assign two looks only after visual source review. Describe age, molt/exuvia state, wear, or freshness only when evidence supports it.",
+            "comparison_rule": "These are two comparative study tracks, not claims about the photographed individual. Assign age/stage traits only after visual source review; retain unknowns.",
+        },
+        "closeup_plan": {
+            "target_image_count": 6,
+            "views_per_look": 3,
+            "view_ids": ["FACE_EYES_PEDIPALPS", "LEG_JOINT_COLOR_BOUNDARIES", "BODY_SURFACE_SETAE"],
+            "assignments": [
+                {"look_id": look_id, "view": view, "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"}
+                for look_id in look_ids
+                for view in ["FACE_EYES_PEDIPALPS", "LEG_JOINT_COLOR_BOUNDARIES", "BODY_SURFACE_SETAE"]
+            ],
+            "evidence_rule": "Use source-linked, visually reviewed images; do not treat synthetic close-ups as specimen evidence.",
         },
         "pose_plan": {
             "target_image_count": 12,
@@ -181,7 +211,8 @@ def build_packet(name: str, request_id: str) -> dict:
             "required_next_steps": [
                 "Inspect reference images and reject wrong taxa or unsuitable views.",
                 "Record visible proportions, color, hair density, texture, and specimen condition with source links.",
-                "Fill the LOOK-A and LOOK-B evidence fields from visually reviewed references; never infer age or exuvia condition from name metadata.",
+                "Fill the younger-female and older/adult-female evidence fields from visually reviewed references; never infer the photographed specimen's sex or age from name metadata.",
+                "Research three close-up evidence targets for each look: face/eyes/pedipalps, leg-joint color boundaries, and body surface/setae.",
                 "Generate six views for each accepted look, preserving each look consistently across its views, then review and refine each result.",
             ],
             "automatic_image_generation": "BUILT_IN_CHATGPT_IMAGEGEN_CANNOT_BE_INVOKED_BY_GITHUB_ACTIONS",
@@ -239,9 +270,19 @@ def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
         request_id = _safe_id(job.get("request_id", ""))
         if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", name.strip()):
             raise ValueError("Queue item has a missing or invalid scientific_name")
+        original_drive_file_id = job.get("original_drive_file_id")
+        original_sha256 = job.get("original_sha256")
+        if original_drive_file_id is not None and not re.fullmatch(r"[A-Za-z0-9_-]{10,100}", str(original_drive_file_id)):
+            raise ValueError("Queue item has an invalid original_drive_file_id")
+        if original_sha256 is not None and not re.fullmatch(r"[0-9a-fA-F]{64}", str(original_sha256)):
+            raise ValueError("Queue item has an invalid original_sha256")
         jobs.append({
             "scientific_name": name.strip(),
             "request_id": request_id,
+            "card_id": job.get("card_id"),
+            "original_drive_file_id": original_drive_file_id,
+            "original_sha256": original_sha256,
+            "original_filename": job.get("original_filename"),
             "queue_fingerprint": hashlib.sha256(
                 json.dumps(job, sort_keys=True, ensure_ascii=False).encode("utf-8")
             ).hexdigest()[:12],
@@ -280,7 +321,7 @@ def main() -> int:
             print("RESEARCH_QUEUE_COMPLETE_NO_UNPROCESSED_ITEMS")
             return 0
         stage[0] = "reference_research"
-        packet = build_packet(selected["scientific_name"], selected["request_id"])
+        packet = build_packet(selected["scientific_name"], selected["request_id"], selected)
         packet_path = _write_packet(packet, queue_fingerprint)
     except Exception as exc:
         status = getattr(getattr(exc, "resp", None), "status", None)
