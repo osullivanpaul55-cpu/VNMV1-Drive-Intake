@@ -65,7 +65,8 @@ jobs:
       - name: Build and save a private research packet
         if: steps.config.outputs.configured == 'true'
         env:
-          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          # Use the owner's OAuth identity and quota; service-account auth cannot own My Drive files.
+          GDRIVE_SERVICE_ACCOUNT_JSON: ""
           GDRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
           GDRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
           GDRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
