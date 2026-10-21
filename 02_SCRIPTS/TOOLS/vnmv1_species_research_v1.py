@@ -232,16 +232,24 @@ def build_packet(name: str, request_id: str, specimen_context: dict | None = Non
 
 def _drive_service():
     from googleapiclient.discovery import build
-    raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
-    if raw:
+    oauth_raw = os.environ.get("GDRIVE_OAUTH_USER_JSON", "").strip()
+    service_raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
+    if oauth_raw:
         try:
-            info = json.loads(raw)
+            info = json.loads(oauth_raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Drive OAuth user secret is invalid") from exc
+        from google.oauth2.credentials import Credentials
+        creds = Credentials.from_authorized_user_info(info, scopes=SCOPES)
+    elif service_raw:
+        try:
+            info = json.loads(service_raw)
         except json.JSONDecodeError as exc:
             raise RuntimeError("Drive service-account secret is invalid") from exc
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_info(info, scopes=SCOPES)
     else:
-        raise RuntimeError("Google Drive service-account JSON is required")
+        raise RuntimeError("Google Drive OAuth-user or service-account JSON is required")
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
