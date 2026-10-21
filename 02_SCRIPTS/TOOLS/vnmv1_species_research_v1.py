@@ -245,7 +245,7 @@ def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: s
     print("OUTPUT_FOLDER_CHECK: accessible=true; is_folder="
           + str(folder.get("mimeType") == "application/vnd.google-apps.folder").lower()
           + "; can_add_children=" + str(can_add_children).lower()
-          + "; shared_drive=" + str(bool(folder.get("driveId")).lower())
+          + "; shared_drive=" + str(bool(folder.get("driveId"))).lower()
           )
     query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
     set_stage("output_folder_lookup")
