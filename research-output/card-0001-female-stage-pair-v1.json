@@ -1,0 +1,415 @@
+{
+  "schema": "VNMV1_SPECIES_RESEARCH_PACKET_V1",
+  "request_id": "card-0001-female-stage-pair-v1",
+  "scientific_name_requested": "Abdomegaphobema mesomelas",
+  "collected_at_utc": "2026-10-21T02:44:40.658Z",
+  "research_status": "REFERENCE_CANDIDATES_READY_HUMAN_REVIEW_REQUIRED_SOURCE_BOUND",
+  "taxonomy": {
+    "gbif_match": {
+      "scientific_name": null,
+      "canonical_name": null,
+      "rank": null,
+      "status": null,
+      "confidence": 100,
+      "usage_key": null,
+      "match_type": "NONE",
+      "source_url": "https://api.gbif.org/v1/species/match?name=Abdomegaphobema+mesomelas",
+      "authority_note": "GBIF name match is a candidate; verify against the taxonomic authority for this group."
+    },
+    "inat_taxon_candidates": [
+      {
+        "taxon_id": 1516417,
+        "name": "Abdomegaphobema mesomelas",
+        "rank": "species",
+        "preferred_common_name": "Costa Rican Redleg Tarantula",
+        "observations_count": 1701,
+        "source_url": "https://www.inaturalist.org/taxa/1516417",
+        "is_exact_name": true
+      }
+    ],
+    "inat_exact_name_match": true,
+    "identity_note": "Name matching does not confirm specimen identity. Verify accepted name and synonyms with the specialist authority before using references."
+  },
+  "reference_photos": {
+    "inat": [
+      {
+        "source": "iNaturalist",
+        "observation_id": 17424340,
+        "observation_url": "https://www.inaturalist.org/observations/17424340",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 26472719,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/26472719/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Dan Riley, some rights reserved (CC BY)",
+        "observed_on": "2010-04-15",
+        "place_guess": "1 km este de Tuis de Turrialba entrada a mano izquierda enfrente Jasec, Cartago Province, Tayutic, 30508, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 247715429,
+        "observation_url": "https://www.inaturalist.org/observations/247715429",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 442483867,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/442483867/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Jacek Pietruszewski, some rights reserved (CC BY)",
+        "observed_on": "2024-10-14",
+        "place_guess": "Cabeceras, Provincia de Guanacaste, Tilarán, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 247715429,
+        "observation_url": "https://www.inaturalist.org/observations/247715429",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 442483880,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/442483880/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Jacek Pietruszewski, some rights reserved (CC BY)",
+        "observed_on": "2024-10-14",
+        "place_guess": "Cabeceras, Provincia de Guanacaste, Tilarán, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 247715429,
+        "observation_url": "https://www.inaturalist.org/observations/247715429",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 442483898,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/442483898/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Jacek Pietruszewski, some rights reserved (CC BY)",
+        "observed_on": "2024-10-14",
+        "place_guess": "Cabeceras, Provincia de Guanacaste, Tilarán, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 247715429,
+        "observation_url": "https://www.inaturalist.org/observations/247715429",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 442483912,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/442483912/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Jacek Pietruszewski, some rights reserved (CC BY)",
+        "observed_on": "2024-10-14",
+        "place_guess": "Cabeceras, Provincia de Guanacaste, Tilarán, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 17424339,
+        "observation_url": "https://www.inaturalist.org/observations/17424339",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 26472707,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/26472707/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Dan Riley, some rights reserved (CC BY)",
+        "observed_on": "2010-04-07",
+        "place_guess": "1 km este de Tuis de Turrialba entrada a mano izquierda enfrente Jasec, Cartago Province, Tayutic, 30508, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 293632176,
+        "observation_url": "https://www.inaturalist.org/observations/293632176",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 528463033,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/528463033/square.jpg",
+        "license": "cc0",
+        "attribution": "no rights reserved",
+        "observed_on": "2025-06-28",
+        "place_guess": "Morpho trail, Puntarenas, CR",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 7220431,
+        "observation_url": "https://www.inaturalist.org/observations/7220431",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 9319342,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/9319342/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) David Weisenbeck, some rights reserved (CC BY)",
+        "observed_on": "2017-07-19",
+        "place_guess": "Provincia de Puntarenas, Monteverde, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 177532617,
+        "observation_url": "https://www.inaturalist.org/observations/177532617",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 308782728,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/308782728/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Ben Jobson, some rights reserved (CC BY)",
+        "observed_on": "2023-08-09",
+        "place_guess": "Tronadora, Provincia de Guanacaste, Tilarán, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 334546819,
+        "observation_url": "https://www.inaturalist.org/observations/334546819",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 607560882,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/607560882/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Adrien Jailloux, some rights reserved (CC BY)",
+        "observed_on": "2019-03-01",
+        "place_guess": "Encantado Trail, Abangares, Province de Guanacaste, CR",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 288338824,
+        "observation_url": "https://www.inaturalist.org/observations/288338824",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 518521725,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/518521725/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) fede2cr, some rights reserved (CC BY)",
+        "observed_on": "2025-06-09",
+        "place_guess": "Provincia de Alajuela, San Ramón, Berlín, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 288338824,
+        "observation_url": "https://www.inaturalist.org/observations/288338824",
+        "taxon_name_as_recorded": "Abdomegaphobema mesomelas",
+        "photo_id": 518522686,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/518522686/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) fede2cr, some rights reserved (CC BY)",
+        "observed_on": "2025-06-09",
+        "place_guess": "Provincia de Alajuela, San Ramón, Berlín, Costa Rica",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      }
+    ],
+    "wikimedia_commons": [
+      {
+        "source": "Wikimedia Commons",
+        "page_id": 34451468,
+        "title": "File:Megaphobema mesomelas, the Orange-kneed Tarantula (9047963170).jpg",
+        "page_url": null,
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Megaphobema_mesomelas%2C_the_Orange-kneed_Tarantula_%289047963170%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        "width": 597,
+        "height": 800,
+        "license": "CC BY 2.0",
+        "artist": "Dick Culbert from Gibsons, B.C., Canada",
+        "credit": "Megaphobema mesomelas, the Orange-kneed Tarantula",
+        "attribution_required": "true",
+        "source_warning": "Search results can show a different species or synonym; inspect the image and page before reuse."
+      },
+      {
+        "source": "Wikimedia Commons",
+        "page_id": 145903126,
+        "title": "File:Costa Rican Redleg Tarantula imported from iNaturalist photo 344459076 on 27 February 2024.jpg",
+        "page_url": null,
+        "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Costa_Rican_Redleg_Tarantula_imported_from_iNaturalist_photo_344459076_on_27_February_2024.jpg/1280px-Costa_Rican_Redleg_Tarantula_imported_from_iNaturalist_photo_344459076_on_27_February_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "width": 2048,
+        "height": 1536,
+        "license": "CC0",
+        "artist": "no rights reserved",
+        "credit": "https://www.inaturalist.org/photos/344459076",
+        "attribution_required": "false",
+        "source_warning": "Search results can show a different species or synonym; inspect the image and page before reuse."
+      },
+      {
+        "source": "Wikimedia Commons",
+        "page_id": 177481667,
+        "title": "File:Abdomegaphobema mesomelas - Elias Freyhof - 360956108.jpeg",
+        "page_url": null,
+        "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Abdomegaphobema_mesomelas_-_Elias_Freyhof_-_360956108.jpeg/1280px-Abdomegaphobema_mesomelas_-_Elias_Freyhof_-_360956108.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "width": 1459,
+        "height": 1251,
+        "license": "CC BY 4.0",
+        "artist": "Elias Freyhof",
+        "credit": "https://www.inaturalist.org/photos/360956108",
+        "attribution_required": "true",
+        "source_warning": "Search results can show a different species or synonym; inspect the image and page before reuse."
+      }
+    ],
+    "photo_count": 15,
+    "reuse_note": "Confirm image identity, license, attribution, source page, and reuse terms before use."
+  },
+  "image_analysis_status": "NOT_ANALYSED_BY_VISION_MODEL",
+  "specimen_appearance_pair": {
+    "status": "UNASSESSED_REQUIRES_VISUAL_REVIEW",
+    "species_name": "Abdomegaphobema mesomelas",
+    "appearance_groups": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "label": "Younger/juvenile female study track",
+        "life_stage": "YOUNG_OR_JUVENILE",
+        "sex_for_study": "FEMALE_ASSUMED_BY_USER",
+        "age_or_condition": "YOUNG_OR_JUVENILE",
+        "life_stage_status": "STUDY_CATEGORY_ONLY_RESEARCH_REQUIRED",
+        "visual_notes": null,
+        "supporting_reference_ids": [],
+        "review_status": "UNASSIGNED_REQUIRES_VISUAL_REVIEW"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "label": "Older/adult female study track",
+        "life_stage": "ADULT_OR_OLDER",
+        "sex_for_study": "FEMALE_ASSUMED_BY_USER",
+        "age_or_condition": "ADULT_OR_OLDER",
+        "life_stage_status": "STUDY_CATEGORY_ONLY_RESEARCH_REQUIRED",
+        "visual_notes": null,
+        "supporting_reference_ids": [],
+        "review_status": "UNASSIGNED_REQUIRES_VISUAL_REVIEW"
+      }
+    ],
+    "comparison_rule": "Two comparative study tracks, not claims about the photographed individual. Assign age/stage traits only after visual source review; retain unknowns."
+  },
+  "pose_plan": {
+    "target_image_count": 12,
+    "looks": 2,
+    "views_per_look": 6,
+    "view_ids": [
+      "FRONT",
+      "SIDE",
+      "REAR",
+      "OBLIQUE",
+      "TOP_DOWN",
+      "WALKING_AWAY"
+    ],
+    "assignments": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "FRONT",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "SIDE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "REAR",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "OBLIQUE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "TOP_DOWN",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "WALKING_AWAY",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "FRONT",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "SIDE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "REAR",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "OBLIQUE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "TOP_DOWN",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "WALKING_AWAY",
+        "status": "NOT_GENERATED"
+      }
+    ],
+    "consistency_rule": "Keep each study track coherent across six views. Study tracks are population/life-stage explorations, not reconstructions of the original individual's unobserved appearance."
+  },
+  "generation_handoff": {
+    "status": "READY_FOR_CHATGPT_REVIEW",
+    "species_name": "Abdomegaphobema mesomelas",
+    "required_next_steps": [
+      "Inspect the private original card image and reject source/reference mismatches.",
+      "Inspect linked reference images; verify source identity, photo license, attribution, viewpoint, and close-up usefulness.",
+      "Record supported appearance differences for the younger-female and older/adult-female study tracks; keep the original individual's actual sex and life stage unverified.",
+      "Research and visually review the three close-up targets per track: face/eyes/pedipalps, leg-joint color boundaries, and body surface/setae.",
+      "Generate six poses for each accepted study track, then refine and review each view. Keep generated studies separate from specimen evidence."
+    ],
+    "automatic_image_generation": "BUILT_IN_CHATGPT_IMAGEGEN_REMAINS_INTERACTIVE; GITHUB_ACTIONS_DOES_NOT_INVOKE_IT"
+  },
+  "request_fingerprint": "f3787c4b515c0a91d6ed388c52a2fb863138c989714b5104f4f46ed2991bf042",
+  "queue_fingerprint": "a60074dcdb09",
+  "source_specimen": {
+    "card_id": "Card_0001",
+    "original_drive_file_id": "1WEONxnOlB3khFofUQBrFzCHDRLEZNcTJ",
+    "original_sha256": "b758f1395c6a96c6e8037009262f46850458cd1d0d03e35a64310bebfee0939d",
+    "original_filename": "Card_0001_ORIGINAL.png",
+    "sex_default": "FEMALE",
+    "sex_default_basis": "USER_ASSUMPTION_FOR_PACKETING",
+    "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
+    "photographed_individual_life_stage": "UNKNOWN_UNVERIFIED",
+    "original_image_embedded_in_public_packet": false,
+    "original_image_note": "Original image remains in private Drive; this packet stores its source binding only."
+  },
+  "closeup_plan": {
+    "target_image_count": 6,
+    "views_per_look": 3,
+    "view_ids": [
+      "FACE_EYES_PEDIPALPS",
+      "LEG_JOINT_COLOR_BOUNDARIES",
+      "BODY_SURFACE_SETAE"
+    ],
+    "assignments": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "FACE_EYES_PEDIPALPS",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "LEG_JOINT_COLOR_BOUNDARIES",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "BODY_SURFACE_SETAE",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "FACE_EYES_PEDIPALPS",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "LEG_JOINT_COLOR_BOUNDARIES",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "BODY_SURFACE_SETAE",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      }
+    ],
+    "evidence_rule": "First select and visually review source-linked images for each detail. Synthetic close-ups remain exploratory and cannot establish specimen facts."
+  },
+  "packet_processing_mode": "MANUAL_REPACK_FROM_EXISTING_AUTOMATED_SOURCE_LINKED_RESEARCH",
+  "production_approval": false
+}
