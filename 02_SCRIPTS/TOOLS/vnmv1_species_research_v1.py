@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-SCOPES = ["https://www.googleapis.com/auth/drive"]
+SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 USER_AGENT = "VNMV1-research-runner/1.0"
 LICENSES = {"cc0", "cc-by", "cc-by-sa"}
 MAX_PHOTOS = 12
@@ -191,34 +191,17 @@ def build_packet(name: str, request_id: str) -> dict:
 
 
 def _drive_service():
-    oauth_client_id = os.environ.get("GDRIVE_OAUTH_CLIENT_ID", "").strip()
-    oauth_client_secret = os.environ.get("GDRIVE_OAUTH_CLIENT_SECRET", "").strip()
-    oauth_refresh_token = os.environ.get("GDRIVE_OAUTH_REFRESH_TOKEN", "").strip()
     from googleapiclient.discovery import build
-
-    # Prefer the user's OAuth identity for personal My Drive folders. Google
-    # service accounts have no personal storage quota and may be unable to add
-    # files to folders shared from a consumer Gmail account.
-    if oauth_client_id and oauth_client_secret and oauth_refresh_token:
-        from google.oauth2.credentials import Credentials
-        creds = Credentials(
-            token=None,
-            refresh_token=oauth_refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=oauth_client_id,
-            client_secret=oauth_client_secret,
-            scopes=SCOPES,
-        )
-    else:
-        raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
-        if not raw:
-            raise RuntimeError("Google Drive OAuth or service-account credentials are required")
+    raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
+    if raw:
         try:
             info = json.loads(raw)
         except json.JSONDecodeError as exc:
             raise RuntimeError("Drive service-account secret is invalid") from exc
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+    else:
+        raise RuntimeError("Google Drive service-account JSON is required")
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
@@ -268,28 +251,15 @@ def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
     return jobs, hashlib.sha256(raw).hexdigest()[:12]
 
 
-def _packet_exists(service, folder_id: str, request_id: str) -> bool:
-    from googleapiclient.errors import HttpError
-    filename = f"RESEARCH_PACKET_{request_id}.json"
-    escaped = filename.replace("'", "\\'")
-    response = service.files().list(
-        q=f"name='{escaped}' and '{folder_id}' in parents and trashed=false",
-        pageSize=1, fields="files(id,name)"
-    ).execute()
-    return bool(response.get("files"))
-
-
-def _write_packet(service, folder_id: str, packet: dict, request_id: str) -> None:
-    from googleapiclient.http import MediaIoBaseUpload
-    filename = f"RESEARCH_PACKET_{request_id}.json"
-    body = {
-        "name": filename,
-        "mimeType": "application/json",
-        "parents": [folder_id],
-    }
-    payload = json.dumps(packet, ensure_ascii=False, indent=2).encode("utf-8")
-    media = MediaIoBaseUpload(io.BytesIO(payload), mimetype="application/json", resumable=False)
-    service.files().create(body=body, media_body=media, fields="id").execute()
+def _write_packet(packet: dict, queue_fingerprint: str) -> str:
+    os.makedirs("research-output", exist_ok=True)
+    request_id = _safe_id(packet.get("request_id", ""))
+    path = os.path.join("research-output", f"{request_id}.json")
+    packet["queue_fingerprint"] = queue_fingerprint
+    with open(path, "w", encoding="utf-8") as output:
+        json.dump(packet, output, ensure_ascii=False, indent=2)
+        output.write("\\n")
+    return path
 
 
 
@@ -297,27 +267,21 @@ def main() -> int:
     stage = ["drive_authentication"]
     try:
         service = _drive_service()
-        set_stage = lambda value: stage.__setitem__(0, value)
-        set_stage("queue_read")
+        stage[0] = "queue_read"
         jobs, queue_fingerprint = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
-        output_folder_id = os.environ["RESEARCH_OUTPUT_FOLDER_ID"].strip()
-        if not re.fullmatch(r"[A-Za-z0-9_-]{10,100}", output_folder_id):
-            raise ValueError("Research output folder is missing or invalid")
-        selected = None
-        set_stage("output_deduplication_check")
-        for job in jobs:
-            if not _packet_exists(service, output_folder_id, job["request_id"]):
-                selected = job
-                break
+        os.makedirs("research-output", exist_ok=True)
+        selected = next(
+            (job for job in jobs if not os.path.exists(
+                os.path.join("research-output", f"{job['request_id']}.json")
+            )),
+            None,
+        )
         if selected is None:
             print("RESEARCH_QUEUE_COMPLETE_NO_UNPROCESSED_ITEMS")
             return 0
-        set_stage("reference_research")
+        stage[0] = "reference_research"
         packet = build_packet(selected["scientific_name"], selected["request_id"])
-        packet["queue_fingerprint"] = queue_fingerprint
-        packet["request_fingerprint"] = selected["queue_fingerprint"]
-        set_stage("drive_packet_write")
-        _write_packet(service, output_folder_id, packet, selected["request_id"])
+        packet_path = _write_packet(packet, queue_fingerprint)
     except Exception as exc:
         status = getattr(getattr(exc, "resp", None), "status", None)
         if status is None:
@@ -334,7 +298,7 @@ def main() -> int:
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
-    print("PRIVATE_DRIVE_RESEARCH_PACKET_CREATED")
+    print("PUBLIC_RESEARCH_PACKET_READY_FOR_COMMIT")
     return 0
 
 
