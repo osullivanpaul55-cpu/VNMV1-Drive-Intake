@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 USER_AGENT = "VNMV1-research-runner/1.0"
 LICENSES = {"cc0", "cc-by", "cc-by-sa"}
 MAX_PHOTOS = 12
@@ -229,7 +229,7 @@ def _safe_id(value: str) -> str:
     return value
 
 
-def _read_queue(service, file_id: str) -> dict:
+def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
     from googleapiclient.http import MediaIoBaseDownload
     meta = service.files().get(fileId=file_id, fields="mimeType").execute()
     if meta.get("mimeType") != "application/json":
@@ -240,104 +240,94 @@ def _read_queue(service, file_id: str) -> dict:
     while not done:
         _, done = downloader.next_chunk()
     raw = buffer.getvalue()
-    job = json.loads(raw.decode("utf-8"))
-    if not isinstance(job, dict):
-        raise ValueError("Queue content must be a JSON object")
-    name = job.get("scientific_name")
-    request_id = _safe_id(job.get("request_id", ""))
-    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", name.strip()):
-        raise ValueError("scientific_name is missing or invalid")
-    return {
-        "scientific_name": name.strip(),
-        "request_id": request_id,
-        "queue_fingerprint": hashlib.sha256(raw).hexdigest()[:12],
-    }
-
-
-def _artifact_exists(name: str) -> bool:
-    token = os.environ.get("GITHUB_TOKEN", "").strip()
-    repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
-    if not token or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
-        raise RuntimeError("GitHub artifact lookup is not configured")
-    page = 1
-    while page <= 100:
-        url = f"https://api.github.com/repos/{repository}/actions/artifacts?per_page=100&page={page}"
-        request = Request(url, headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {token}",
-            "X-GitHub-Api-Version": "2022-11-28",
+    payload = json.loads(raw.decode("utf-8"))
+    if isinstance(payload, dict) and isinstance(payload.get("jobs"), list):
+        records = payload["jobs"]
+    elif isinstance(payload, list):
+        records = payload
+    elif isinstance(payload, dict):
+        records = [payload]
+    else:
+        raise ValueError("Queue content must be an object, jobs object, or array")
+    jobs = []
+    for job in records:
+        if not isinstance(job, dict):
+            continue
+        name = job.get("scientific_name")
+        request_id = _safe_id(job.get("request_id", ""))
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", name.strip()):
+            raise ValueError("Queue item has a missing or invalid scientific_name")
+        jobs.append({
+            "scientific_name": name.strip(),
+            "request_id": request_id,
+            "queue_fingerprint": hashlib.sha256(
+                json.dumps(job, sort_keys=True, ensure_ascii=False).encode("utf-8")
+            ).hexdigest()[:12],
         })
-        with urlopen(request, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-        artifacts = data.get("artifacts", [])
-        if any(item.get("name") == name and not item.get("expired", False) for item in artifacts):
-            return True
-        if len(artifacts) < 100 or page * 100 >= data.get("total_count", 0):
-            return False
-        page += 1
-    raise RuntimeError("GitHub artifact history exceeds safe lookup limit")
+    if not jobs:
+        raise ValueError("Queue contains no valid jobs")
+    return jobs, hashlib.sha256(raw).hexdigest()[:12]
 
 
-def _write_packet(packet: dict, queue_fingerprint: str) -> str:
-    os.makedirs("research-output", exist_ok=True)
-    name = f"species-research-{queue_fingerprint}"
-    path = os.path.join("research-output", f"{name}.json")
-    # Request IDs can encode private card/roster identifiers; omit them from
-    # the public artifact while retaining public species research and sources.
-    packet.pop("request_id", None)
-    with open(path, "w", encoding="utf-8") as output:
-        json.dump(packet, output, ensure_ascii=False, indent=2)
-        output.write("\n")
-    return name
+def _packet_exists(service, folder_id: str, request_id: str) -> bool:
+    from googleapiclient.errors import HttpError
+    filename = f"RESEARCH_PACKET_{request_id}.json"
+    escaped = filename.replace("'", "\\'")
+    response = service.files().list(
+        q=f"name='{escaped}' and '{folder_id}' in parents and trashed=false",
+        pageSize=1, fields="files(id,name)"
+    ).execute()
+    return bool(response.get("files"))
 
 
-def _set_output(key: str, value: str) -> None:
-    output_path = os.environ.get("GITHUB_OUTPUT")
-    if output_path:
-        with open(output_path, "a", encoding="utf-8") as output:
-            output.write(f"{key}={value}\n")
+def _write_packet(service, folder_id: str, packet: dict, request_id: str) -> None:
+    from googleapiclient.http import MediaIoBaseUpload
+    filename = f"RESEARCH_PACKET_{request_id}.json"
+    body = {
+        "name": filename,
+        "mimeType": "application/json",
+        "parents": [folder_id],
+    }
+    payload = json.dumps(packet, ensure_ascii=False, indent=2).encode("utf-8")
+    media = MediaIoBaseUpload(io.BytesIO(payload), mimetype="application/json", resumable=False)
+    service.files().create(body=body, media_body=media, fields="id").execute()
+
 
 
 def main() -> int:
     stage = ["drive_authentication"]
-    set_stage = lambda value: stage.__setitem__(0, value)
     try:
         service = _drive_service()
+        set_stage = lambda value: stage.__setitem__(0, value)
         set_stage("queue_read")
-        job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
-        artifact_name = f"species-research-{job['queue_fingerprint']}"
-        set_stage("artifact_deduplication_check")
-        if _artifact_exists(artifact_name):
-            _set_output("artifact_name", artifact_name)
-            _set_output("upload", "false")
-            print("SPECIES_RESEARCH_PACKET_ALREADY_PUBLISHED")
+        jobs, queue_fingerprint = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
+        output_folder_id = os.environ["RESEARCH_OUTPUT_FOLDER_ID"].strip()
+        if not re.fullmatch(r"[A-Za-z0-9_-]{10,100}", output_folder_id):
+            raise ValueError("Research output folder is missing or invalid")
+        selected = None
+        set_stage("output_deduplication_check")
+        for job in jobs:
+            if not _packet_exists(service, output_folder_id, job["request_id"]):
+                selected = job
+                break
+        if selected is None:
+            print("RESEARCH_QUEUE_COMPLETE_NO_UNPROCESSED_ITEMS")
             return 0
         set_stage("reference_research")
-        packet = build_packet(job["scientific_name"], job["request_id"])
-        packet["queue_fingerprint"] = job["queue_fingerprint"]
-        artifact_name = _write_packet(packet, job["queue_fingerprint"])
-        _set_output("artifact_name", artifact_name)
-        _set_output("upload", "true")
+        packet = build_packet(selected["scientific_name"], selected["request_id"])
+        packet["queue_fingerprint"] = queue_fingerprint
+        packet["request_fingerprint"] = selected["queue_fingerprint"]
+        set_stage("drive_packet_write")
+        _write_packet(service, output_folder_id, packet, selected["request_id"])
     except Exception as exc:
-        # Report only a coarse stage, HTTP status/type, and an allowlisted OAuth
-        # error code. Never log IDs, names, credentials, URLs, or response bodies.
         status = getattr(getattr(exc, "resp", None), "status", None)
         if status is None:
             status = getattr(exc, "code", None)
         safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
-        if type(exc).__name__ == "RefreshError":
-            safe_detail = "OAUTH_REFRESH_REJECTED"
-            safe_args = " ".join(str(arg) for arg in getattr(exc, "args", ())).lower()
-            for code in ("invalid_grant", "invalid_client", "unauthorized_client",
-                         "invalid_scope", "access_denied", "invalid_request"):
-                if code in safe_args:
-                    safe_detail = f"OAUTH_{code.upper()}"
-                    break
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
-    print("PUBLIC_SPECIES_RESEARCH_PACKET_READY_FOR_ARTIFACT")
+    print("PRIVATE_DRIVE_RESEARCH_PACKET_CREATED")
     return 0
 
 
