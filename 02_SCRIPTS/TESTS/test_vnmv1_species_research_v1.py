@@ -87,6 +87,11 @@ class SpeciesResearchTests(unittest.TestCase):
         self.assertEqual(packet["pose_plan"]["views_per_look"], 6)
         self.assertEqual(len(packet["pose_plan"]["assignments"]), 12)
         self.assertEqual(len(packet["specimen_appearance_pair"]["appearance_groups"]), 2)
+        groups = packet["specimen_appearance_pair"]["appearance_groups"]
+        self.assertEqual([group["look_id"] for group in groups], ["YOUNGER_FEMALE", "OLDER_FEMALE"])
+        self.assertTrue(all(group["sex_for_study"] == "FEMALE_ASSUMED_BY_USER" for group in groups))
+        self.assertEqual(len(packet["closeup_plan"]["assignments"]), 6)
+        self.assertFalse(packet["source_specimen"]["original_image_embedded_in_public_packet"])
 
 
 if __name__ == "__main__":
