@@ -258,7 +258,7 @@ def _write_packet(packet: dict, queue_fingerprint: str) -> str:
     packet["queue_fingerprint"] = queue_fingerprint
     with open(path, "w", encoding="utf-8") as output:
         json.dump(packet, output, ensure_ascii=False, indent=2)
-        output.write("\\n")
+        output.write("\n")
     return path
 
 
