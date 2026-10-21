@@ -21,10 +21,13 @@ jobs:
         id: config
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
+          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
+          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
           RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: |
-          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$RESEARCH_OUTPUT_FOLDER_ID" ]]; then
+          if [[ -z "$RESEARCH_QUEUE_FILE_ID" || -z "$RESEARCH_OUTPUT_FOLDER_ID" ]] || { [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" ]] && { [[ -z "$DRIVE_OAUTH_CLIENT_ID" ]] || [[ -z "$DRIVE_OAUTH_CLIENT_SECRET" ]] || [[ -z "$DRIVE_OAUTH_REFRESH_TOKEN" ]]; }; }; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Private Drive queue or output folder is not configured."
           else
@@ -57,6 +60,9 @@ jobs:
         if: steps.config.outputs.configured == 'true'
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
+          GDRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
+          GDRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
           RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
