@@ -231,7 +231,7 @@ def _safe_id(value: str) -> str:
 
 def _read_queue(service, file_id: str) -> dict:
     from googleapiclient.http import MediaIoBaseDownload
-    meta = service.files().get(fileId=file_id, fields="mimeType,parents").execute()
+    meta = service.files().get(fileId=file_id, fields="mimeType").execute()
     if meta.get("mimeType") != "application/json":
         raise ValueError("Queue file must be application/json")
     buffer = io.BytesIO()
@@ -247,14 +247,10 @@ def _read_queue(service, file_id: str) -> dict:
     request_id = _safe_id(job.get("request_id", ""))
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", name.strip()):
         raise ValueError("scientific_name is missing or invalid")
-    parents = meta.get("parents") or []
-    if not parents:
-        raise ValueError("Queue file has no accessible parent folder")
     return {
         "scientific_name": name.strip(),
         "request_id": request_id,
         "queue_fingerprint": hashlib.sha256(raw).hexdigest()[:12],
-        "queue_folder_id": parents[0],
     }
 
 
@@ -292,10 +288,7 @@ def main() -> int:
         set_stage("reference_research")
         packet = build_packet(job["scientific_name"], job["request_id"])
         packet["queue_fingerprint"] = job["queue_fingerprint"]
-        # Store packets beside the queue file. This avoids depending on a
-        # separate output-folder secret and uses the folder the runner already
-        # proved it can access by reading the queue.
-        _write_packet(service, job["queue_folder_id"], job["request_id"],
+        _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
                       job["queue_fingerprint"], packet, set_stage)
     except Exception as exc:
         # Report only a coarse stage, HTTP status/type, and an allowlisted OAuth
