@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-SCOPES = ["https://www.googleapis.com/auth/drive"]
+SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 USER_AGENT = "VNMV1-research-runner/1.0"
 LICENSES = {"cc0", "cc-by", "cc-by-sa"}
 MAX_PHOTOS = 12
@@ -254,28 +254,49 @@ def _read_queue(service, file_id: str) -> dict:
     }
 
 
-def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict, set_stage) -> None:
-    from googleapiclient.http import MediaIoBaseUpload
-    name = f"RESEARCH_PACKET_{request_id}_{queue_fingerprint}.json"
-    set_stage("output_folder_metadata_check")
-    folder = service.files().get(fileId=folder_id,
-        fields="mimeType,driveId,capabilities(canAddChildren)", supportsAllDrives=True).execute()
-    can_add_children = (folder.get("capabilities") or {}).get("canAddChildren")
-    print("OUTPUT_FOLDER_CHECK: accessible=true; is_folder="
-          + str(folder.get("mimeType") == "application/vnd.google-apps.folder").lower()
-          + "; can_add_children=" + str(can_add_children).lower()
-          + "; shared_drive=" + str(bool(folder.get("driveId"))).lower()
-          )
-    query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
-    set_stage("output_folder_lookup")
-    existing = service.files().list(q=query, pageSize=10, fields="files(id)").execute().get("files", [])
-    if existing:
-        return
-    media = MediaIoBaseUpload(io.BytesIO(json.dumps(packet, ensure_ascii=False, indent=2).encode()),
-                              mimetype="application/json", resumable=False)
-    set_stage("packet_create")
-    service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
-                           media_body=media, fields="id", supportsAllDrives=True).execute()
+def _artifact_exists(name: str) -> bool:
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    if not token or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise RuntimeError("GitHub artifact lookup is not configured")
+    page = 1
+    while page <= 100:
+        url = f"https://api.github.com/repos/{repository}/actions/artifacts?per_page=100&page={page}"
+        request = Request(url, headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        })
+        with urlopen(request, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        artifacts = data.get("artifacts", [])
+        if any(item.get("name") == name and not item.get("expired", False) for item in artifacts):
+            return True
+        if len(artifacts) < 100 or page * 100 >= data.get("total_count", 0):
+            return False
+        page += 1
+    raise RuntimeError("GitHub artifact history exceeds safe lookup limit")
+
+
+def _write_packet(packet: dict, queue_fingerprint: str) -> str:
+    os.makedirs("research-output", exist_ok=True)
+    name = f"species-research-{queue_fingerprint}"
+    path = os.path.join("research-output", f"{name}.json")
+    # Request IDs can encode private card/roster identifiers; omit them from
+    # the public artifact while retaining public species research and sources.
+    packet.pop("request_id", None)
+    with open(path, "w", encoding="utf-8") as output:
+        json.dump(packet, output, ensure_ascii=False, indent=2)
+        output.write("\n")
+    return name
+
+
+def _set_output(key: str, value: str) -> None:
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if output_path:
+        with open(output_path, "a", encoding="utf-8") as output:
+            output.write(f"{key}={value}\n")
 
 
 def main() -> int:
@@ -285,11 +306,19 @@ def main() -> int:
         service = _drive_service()
         set_stage("queue_read")
         job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
+        artifact_name = f"species-research-{job['queue_fingerprint']}"
+        set_stage("artifact_deduplication_check")
+        if _artifact_exists(artifact_name):
+            _set_output("artifact_name", artifact_name)
+            _set_output("upload", "false")
+            print("SPECIES_RESEARCH_PACKET_ALREADY_PUBLISHED")
+            return 0
         set_stage("reference_research")
         packet = build_packet(job["scientific_name"], job["request_id"])
         packet["queue_fingerprint"] = job["queue_fingerprint"]
-        _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
-                      job["queue_fingerprint"], packet, set_stage)
+        artifact_name = _write_packet(packet, job["queue_fingerprint"])
+        _set_output("artifact_name", artifact_name)
+        _set_output("upload", "true")
     except Exception as exc:
         # Report only a coarse stage, HTTP status/type, and an allowlisted OAuth
         # error code. Never log IDs, names, credentials, URLs, or response bodies.
@@ -308,7 +337,7 @@ def main() -> int:
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
-    print("PRIVATE_SPECIES_RESEARCH_PACKET_SAVED")
+    print("PUBLIC_SPECIES_RESEARCH_PACKET_READY_FOR_ARTIFACT")
     return 0
 
 
