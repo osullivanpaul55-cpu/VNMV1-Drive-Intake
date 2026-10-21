@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: vnmv1-species-research
@@ -18,20 +17,21 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Check private queue configuration
+      - name: Check private Drive queue configuration
         id: config
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
+          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: |
-          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" ]]; then
+          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$RESEARCH_OUTPUT_FOLDER_ID" ]]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Private Drive queue is not configured."
+            echo "::notice::Private Drive queue or output folder is not configured."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout public runner code
+      - name: Checkout runner code
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -41,8 +41,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements.txt
 
       - name: Validate research collector
         if: steps.config.outputs.configured == 'true'
@@ -55,31 +53,21 @@ jobs:
         if: steps.config.outputs.configured == 'true'
         run: python -m pip install --disable-pip-version-check --quiet -r requirements.txt
 
-      - name: Research the next queued species
-        id: research
+      - name: Build the next private Drive research packet
         if: steps.config.outputs.configured == 'true'
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
 
-      - name: Upload public research packet
-        if: steps.config.outputs.configured == 'true' && steps.research.outputs.upload == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.research.outputs.artifact_name }}
-          path: research-output/*.json
-          if-no-files-found: error
-          retention-days: 90
-
-      - name: Report run without private identifiers
+      - name: Report safe run status
         if: always()
         run: |
           {
             echo "## Species research queue"
             echo
-            echo "The public artifact contains species research and source links. Queue/card request identifiers and image files are omitted. Anyone can download it; it expires after 90 days."
-            echo "Reference photos still need visual review, and image generation must be run in a ChatGPT session."
+            echo "Research packet contents and image files are stored in private Drive."
+            echo "Each scheduled run creates at most one packet for the next unprocessed queue item."
+            echo "The built-in ChatGPT ImageGen step still requires a ChatGPT image-generation session."
           } >> "$GITHUB_STEP_SUMMARY"
