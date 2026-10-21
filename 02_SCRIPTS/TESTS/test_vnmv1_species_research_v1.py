@@ -1,7 +1,9 @@
 import io
+import json
 import sys
+import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import chdir, redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 
@@ -59,6 +61,16 @@ class SpeciesResearchTests(unittest.TestCase):
         self.assertEqual(research._safe_id("card-0001-ind-1"), "card-0001-ind-1")
         with self.assertRaises(ValueError):
             research._safe_id("../../private")
+
+    def test_public_artifact_omits_queue_request_identifier(self):
+        packet = {"request_id": "card-0001-private", "scientific_name_requested": "Testa specimen"}
+        with tempfile.TemporaryDirectory() as temp_dir, chdir(temp_dir):
+            name = research._write_packet(packet, "abc123")
+            self.assertEqual(name, "species-research-abc123")
+            with open("research-output/species-research-abc123.json", encoding="utf-8") as source:
+                saved = json.load(source)
+        self.assertNotIn("request_id", saved)
+        self.assertEqual(saved["scientific_name_requested"], "Testa specimen")
 
     def test_packet_does_not_claim_analysis_or_imagegen(self):
         with patch.object(research, "gbif_match", return_value={"canonical_name": "Testa specimen"}), \
