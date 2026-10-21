@@ -62,29 +62,15 @@ class SpeciesResearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             research._safe_id("../../private")
 
-    def test_drive_packet_writer_targets_private_output_folder(self):
-        class FakeFiles:
-            def create(self, **kwargs):
-                self.kwargs = kwargs
-                class Request:
-                    def execute(self_inner):
-                        return {"id": "private-drive-file"}
-                return Request()
-
-        class FakeService:
-            def __init__(self):
-                self.files_api = FakeFiles()
-            def files(self):
-                return self.files_api
-
-        service = FakeService()
-        packet = {"request_id": "card-0001-private", "scientific_name_requested": "Testa specimen"}
-        research._write_packet(service, "private-folder-id", packet, "card-0001-private")
-        request = service.files_api.kwargs
-        self.assertEqual(request["body"]["name"], "RESEARCH_PACKET_card-0001-private.json")
-        self.assertEqual(request["body"]["parents"], ["private-folder-id"])
-        self.assertEqual(request["body"]["mimeType"], "application/json")
-        self.assertEqual(request["media_body"]._mimetype, "application/json")
+    def test_packet_writer_persists_request_in_public_repo_output(self):
+        packet = {"request_id": "card-0001-pilot", "scientific_name_requested": "Testa specimen"}
+        with tempfile.TemporaryDirectory() as temp_dir, chdir(temp_dir):
+            path = research._write_packet(packet, "abc123")
+            self.assertEqual(path, "research-output/card-0001-pilot.json")
+            with open(path, encoding="utf-8") as source:
+                saved = json.load(source)
+        self.assertEqual(saved["request_id"], "card-0001-pilot")
+        self.assertEqual(saved["queue_fingerprint"], "abc123")
 
     def test_packet_does_not_claim_analysis_or_imagegen(self):
         with patch.object(research, "gbif_match", return_value={"canonical_name": "Testa specimen"}), \
