@@ -1,0 +1,404 @@
+{
+  "schema": "VNMV1_SPECIES_RESEARCH_PACKET_V1",
+  "request_id": "card-0002-female-stage-pair-v1",
+  "scientific_name_requested": "Acanthoscurria chacoana",
+  "collected_at_utc": "2026-10-21T02:48:52.597736+00:00",
+  "research_status": "REFERENCE_CANDIDATES_READY_HUMAN_REVIEW_REQUIRED",
+  "taxonomy": {
+    "gbif_match": {
+      "scientific_name": "Acanthoscurria chacoana Brèthes, 1909",
+      "canonical_name": "Acanthoscurria chacoana",
+      "rank": "SPECIES",
+      "status": "ACCEPTED",
+      "confidence": 99,
+      "usage_key": 2153835,
+      "match_type": "EXACT",
+      "source_url": "https://api.gbif.org/v1/species/match?name=Acanthoscurria+chacoana",
+      "authority_note": "GBIF name match is a candidate; verify against the taxonomic authority for this group."
+    },
+    "inat_taxon_candidates": [
+      {
+        "taxon_id": 545960,
+        "name": "Acanthoscurria chacoana",
+        "rank": "species",
+        "preferred_common_name": "Bolivian Salmon Pink Tarantula",
+        "observations_count": 151,
+        "source_url": "https://www.inaturalist.org/taxa/545960",
+        "is_exact_name": true
+      }
+    ],
+    "inat_exact_name_match": true,
+    "identity_note": "Name matching does not confirm specimen identity. Verify accepted name and synonyms with the specialist authority before using references."
+  },
+  "reference_photos": {
+    "inat": [
+      {
+        "source": "iNaturalist",
+        "observation_id": 108305424,
+        "observation_url": "https://www.inaturalist.org/observations/108305424",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 182325808,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/182325808/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Morten Ross, some rights reserved (CC BY)",
+        "observed_on": "2014-12-03",
+        "place_guess": "Poconé - State of Mato Grosso, 78175-000, Brazil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 108305424,
+        "observation_url": "https://www.inaturalist.org/observations/108305424",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 182325886,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/182325886/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Morten Ross, some rights reserved (CC BY)",
+        "observed_on": "2014-12-03",
+        "place_guess": "Poconé - State of Mato Grosso, 78175-000, Brazil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 278858217,
+        "observation_url": "https://www.inaturalist.org/observations/278858217",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 500710105,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/500710105/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Josh Noseworthy, some rights reserved (CC BY)",
+        "observed_on": "2025-05-02",
+        "place_guess": "Cordillera, Bolivia",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 169700051,
+        "observation_url": "https://www.inaturalist.org/observations/169700051",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 294244397,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/294244397/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Thomaz Ricardo Favreto Sinani, some rights reserved (CC BY)",
+        "observed_on": "2023-04-02",
+        "place_guess": "Piraputanga, Aquidauana - MS, Brasil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 70404694,
+        "observation_url": "https://www.inaturalist.org/observations/70404694",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 114448505,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/114448505/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Pablo H Capovilla, some rights reserved (CC BY)",
+        "observed_on": "2017-10-30",
+        "place_guess": "Sgto Cabral, Chaco, Argentina",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 91024492,
+        "observation_url": "https://www.inaturalist.org/observations/91024492",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 150501010,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/150501010/square.jpeg",
+        "license": "cc-by",
+        "attribution": "(c) Patricio Cowper Coles, some rights reserved (CC BY)",
+        "observed_on": "2015-11-08",
+        "place_guess": "Libertador Gral San Martín, Chaco, Argentina",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 335236584,
+        "observation_url": "https://www.inaturalist.org/observations/335236584",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 608965725,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/608965725/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Esther Marisol Lovera, some rights reserved (CC BY)",
+        "observed_on": "2026-01-18",
+        "place_guess": "San José, Bolivia",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 108267101,
+        "observation_url": "https://www.inaturalist.org/observations/108267101",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 182254590,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/182254590/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Morten Ross, some rights reserved (CC BY)",
+        "observed_on": "2014-11-29",
+        "place_guess": "Poconé - State of Mato Grosso, 78175-000, Brazil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 320295367,
+        "observation_url": "https://www.inaturalist.org/observations/320295367",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 579081718,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/579081718/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Josh Noseworthy, some rights reserved (CC BY)",
+        "observed_on": "2025-10-11",
+        "place_guess": "Pocone, MT, BR",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 399690060,
+        "observation_url": "https://www.inaturalist.org/observations/399690060",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 733328644,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/733328644/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Nicolas Olejnik, some rights reserved (CC BY)",
+        "observed_on": "2026-08-25",
+        "place_guess": "Poconé - Mato Grosso, 78175-000, Brazil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 346017445,
+        "observation_url": "https://www.inaturalist.org/observations/346017445",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 630658922,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/630658922/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Josh Noseworthy, some rights reserved (CC BY)",
+        "observed_on": "2026-03-25",
+        "place_guess": "Cordillera, Santa Cruz, Bolivia",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      },
+      {
+        "source": "iNaturalist",
+        "observation_id": 292372994,
+        "observation_url": "https://www.inaturalist.org/observations/292372994",
+        "taxon_name_as_recorded": "Acanthoscurria chacoana",
+        "photo_id": 526124408,
+        "image_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/526124408/square.jpg",
+        "license": "cc-by",
+        "attribution": "(c) Nicolas Olejnik, some rights reserved (CC BY)",
+        "observed_on": "2025-06-11",
+        "place_guess": "Poconé - State of Mato Grosso, 78175-000, Brazil",
+        "source_warning": "Identification and photo license are user supplied; inspect the image and source before reuse."
+      }
+    ],
+    "wikimedia_commons": [
+      {
+        "source": "Wikimedia Commons",
+        "page_id": 18763005,
+        "title": "File:Acanthoscurria chacoana.jpg",
+        "page_url": null,
+        "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Acanthoscurria_chacoana.jpg/1280px-Acanthoscurria_chacoana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "width": 3072,
+        "height": 2304,
+        "license": "CC BY 2.0",
+        "artist": "snakecollector",
+        "credit": "https://www.flickr.com/photos/8373783@N07/3563237376/",
+        "attribution_required": "true",
+        "source_warning": "Search results can show a different species or synonym; inspect the image and page before reuse."
+      },
+      {
+        "source": "Wikimedia Commons",
+        "page_id": 55001976,
+        "title": "File:Paraguayan Pink Tarantula (Acanthoscurria chacoana) (27973843564).jpg",
+        "page_url": null,
+        "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Paraguayan_Pink_Tarantula_%28Acanthoscurria_chacoana%29_%2827973843564%29.jpg/1280px-Paraguayan_Pink_Tarantula_%28Acanthoscurria_chacoana%29_%2827973843564%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        "width": 3841,
+        "height": 3463,
+        "license": "CC BY-SA 2.0",
+        "artist": "Bernard DUPONT from FRANCE",
+        "credit": "Paraguayan Pink Tarantula (Acanthoscurria chacoana)",
+        "attribution_required": "true",
+        "source_warning": "Search results can show a different species or synonym; inspect the image and page before reuse."
+      }
+    ],
+    "photo_count": 14,
+    "reuse_note": "Confirm image identity, license, attribution, source page, and reuse terms before use."
+  },
+  "source_specimen": {
+    "card_id": "Card_0002",
+    "original_drive_file_id": null,
+    "original_sha256": "d237692a0f11fdf8954c5512f4db68d370cb553c5f8583a8cb551e4825b01768",
+    "original_filename": "Card_0002_ORIGINAL.png",
+    "original_manifest_status": "PROVEN",
+    "original_match_method": "SIDECAR_SPECIMEN_PATH",
+    "original_match_confidence": "HIGH",
+    "taxon_input_status": "REGISTRY_TAXON_CANDIDATE_ONLY",
+    "taxon_input_note": "Taxon input copied from MASTER_526_ASSET_INDEX_V1; automated matches and references are candidates pending identity review.",
+    "sex_default": "FEMALE",
+    "sex_default_basis": "USER_ASSUMPTION_FOR_PACKETING",
+    "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
+    "photographed_individual_life_stage": "UNKNOWN_UNVERIFIED",
+    "original_image_embedded_in_public_packet": false,
+    "original_image_note": "Original remains in private Drive; this public packet records its source binding only."
+  },
+  "image_analysis_status": "NOT_ANALYSED_BY_VISION_MODEL",
+  "specimen_appearance_pair": {
+    "status": "UNASSESSED_REQUIRES_VISUAL_REVIEW",
+    "species_name": "Acanthoscurria chacoana",
+    "appearance_groups": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "label": "Younger/juvenile female study track",
+        "life_stage": "YOUNG_OR_JUVENILE",
+        "sex_for_study": "FEMALE_ASSUMED_BY_USER",
+        "age_or_condition": "YOUNG_OR_JUVENILE",
+        "life_stage_status": "STUDY_CATEGORY_ONLY_RESEARCH_REQUIRED",
+        "visual_notes": null,
+        "supporting_reference_ids": [],
+        "review_status": "UNASSIGNED_REQUIRES_VISUAL_REVIEW"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "label": "Older/adult female study track",
+        "life_stage": "ADULT_OR_OLDER",
+        "sex_for_study": "FEMALE_ASSUMED_BY_USER",
+        "age_or_condition": "ADULT_OR_OLDER",
+        "life_stage_status": "STUDY_CATEGORY_ONLY_RESEARCH_REQUIRED",
+        "visual_notes": null,
+        "supporting_reference_ids": [],
+        "review_status": "UNASSIGNED_REQUIRES_VISUAL_REVIEW"
+      }
+    ],
+    "comparison_rule": "These are two comparative study tracks, not claims about the photographed individual. Assign age/stage traits only after visual source review; retain unknowns."
+  },
+  "closeup_plan": {
+    "target_image_count": 6,
+    "views_per_look": 3,
+    "view_ids": [
+      "FACE_EYES_PEDIPALPS",
+      "LEG_JOINT_COLOR_BOUNDARIES",
+      "BODY_SURFACE_SETAE"
+    ],
+    "assignments": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "FACE_EYES_PEDIPALPS",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "LEG_JOINT_COLOR_BOUNDARIES",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "BODY_SURFACE_SETAE",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "FACE_EYES_PEDIPALPS",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "LEG_JOINT_COLOR_BOUNDARIES",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "BODY_SURFACE_SETAE",
+        "status": "REFERENCE_RESEARCH_AND_REVIEW_PENDING"
+      }
+    ],
+    "evidence_rule": "Use source-linked, visually reviewed images; do not treat synthetic close-ups as specimen evidence."
+  },
+  "pose_plan": {
+    "target_image_count": 12,
+    "looks": 2,
+    "views_per_look": 6,
+    "view_ids": [
+      "FRONT",
+      "SIDE",
+      "REAR",
+      "OBLIQUE",
+      "TOP_DOWN",
+      "WALKING_AWAY"
+    ],
+    "assignments": [
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "FRONT",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "SIDE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "REAR",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "OBLIQUE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "TOP_DOWN",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "YOUNGER_FEMALE",
+        "view": "WALKING_AWAY",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "FRONT",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "SIDE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "REAR",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "OBLIQUE",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "TOP_DOWN",
+        "status": "NOT_GENERATED"
+      },
+      {
+        "look_id": "OLDER_FEMALE",
+        "view": "WALKING_AWAY",
+        "status": "NOT_GENERATED"
+      }
+    ],
+    "consistency_rule": "Keep each look identity stable across its six views; keep the two looks distinct from each other."
+  },
+  "generation_handoff": {
+    "status": "READY_FOR_CHATGPT_REVIEW",
+    "species_name": "Acanthoscurria chacoana",
+    "required_next_steps": [
+      "Inspect reference images and reject wrong taxa or unsuitable views.",
+      "Record visible proportions, color, hair density, texture, and specimen condition with source links.",
+      "Fill the younger-female and older/adult-female evidence fields from visually reviewed references; never infer the photographed specimen's sex or age from name metadata.",
+      "Research three close-up evidence targets for each look: face/eyes/pedipalps, leg-joint color boundaries, and body surface/setae.",
+      "Generate six views for each accepted look, preserving each look consistently across its views, then review and refine each result."
+    ],
+    "automatic_image_generation": "BUILT_IN_CHATGPT_IMAGEGEN_CANNOT_BE_INVOKED_BY_GITHUB_ACTIONS"
+  },
+  "request_fingerprint": "97618dd4f3162e7c23e5e434f7d18e891c5ce77d919c76a7542557d28dc67c32",
+  "queue_fingerprint": "030753c12b49"
+}
