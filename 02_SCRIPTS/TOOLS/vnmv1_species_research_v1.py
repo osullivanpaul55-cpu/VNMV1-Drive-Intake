@@ -8,14 +8,17 @@ import json
 import os
 import re
 import sys
+import zipfile
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 USER_AGENT = "VNMV1-research-runner/1.0"
 LICENSES = {"cc0", "cc-by", "cc-by-sa"}
-MAX_PHOTOS = 12
+MAX_PHOTOS = 24
+MIN_PACKET_IMAGES = 14
+MAX_IMAGE_BYTES = 12 * 1024 * 1024
 
 
 def fetch_json(url: str) -> dict:
@@ -154,6 +157,7 @@ def build_packet(name: str, request_id: str, specimen_context: dict | None = Non
         "reference_photos": {
             "inat": photos, "wikimedia_commons": commons,
             "photo_count": len(photos) + len(commons),
+            "image_bundle_target": MIN_PACKET_IMAGES,
             "reuse_note": "Confirm image identity, license, attribution, source page, and reuse terms before use.",
         },
         "source_specimen": {
@@ -302,13 +306,165 @@ def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
     return jobs, hashlib.sha256(raw).hexdigest()[:12]
 
 
+
+def _image_extension(content_type: str | None, data: bytes) -> str | None:
+    content_type = (content_type or "").split(";", 1)[0].strip().lower()
+    if data.startswith(bytes.fromhex("89504e470d0a1a0a")): return ".png"
+    if data.startswith(bytes.fromhex("ffd8ff")): return ".jpg"
+    if data.startswith(b"RIFF") and data[8:12] == b"WEBP": return ".webp"
+    return None
+
+def _find_original_file(service, job: dict) -> dict | None:
+    file_id = job.get("original_drive_file_id")
+    if file_id:
+        return service.files().get(fileId=file_id, fields="id,name,mimeType,webViewLink").execute()
+    match = re.search(r"(\d{4})$", str(job.get("card_id") or ""))
+    if not match: return None
+    number = match.group(1)
+    for extension in ("png", "jpg", "jpeg", "webp"):
+        name = f"Specimen_Final_{number}.{extension}"
+        result = service.files().list(q=f"name = '{name}' and trashed = false", pageSize=10, fields="files(id,name,mimeType,webViewLink)", includeItemsFromAllDrives=True, supportsAllDrives=True).execute()
+        found = result.get("files") or []
+        if found: return found[0]
+    return None
+
+def _drive_file_bytes(service, file_id: str) -> bytes:
+    from googleapiclient.http import MediaIoBaseDownload
+    buffer = io.BytesIO()
+    downloader = MediaIoBaseDownload(buffer, service.files().get_media(fileId=file_id))
+    done = False
+    while not done: _, done = downloader.next_chunk()
+    return buffer.getvalue()
+
+def _download_external_image(candidate: dict) -> tuple[bytes | None, str | None]:
+    from urllib.parse import urlparse
+    url = candidate.get("image_url")
+    if not isinstance(url, str): return None, None
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    allowed = ("inaturalist.org", "inaturalist-open-data.s3.amazonaws.com", "wikimedia.org")
+    if parsed.scheme != "https" or not any(host == x or host.endswith("." + x) for x in allowed): return None, None
+    try:
+        request = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "image/*"})
+        with urlopen(request, timeout=25) as response:
+            content_type = response.headers.get("Content-Type")
+            data = response.read(MAX_IMAGE_BYTES + 1)
+        if len(data) > MAX_IMAGE_BYTES: return None, None
+        ext = _image_extension(content_type, data)
+        return (data, ext) if ext else (None, None)
+    except Exception:
+        return None, None
+
+
+def _make_and_upload_image_packet(service, packet: dict, queue_fingerprint: str) -> dict:
+    from googleapiclient.http import MediaIoBaseUpload
+    folder_id = os.environ.get("VNMV1_PACKET_DRIVE_FOLDER_ID", "").strip()
+    if not folder_id:
+        raise RuntimeError("VNMV1_PACKET_DRIVE_FOLDER_ID is required")
+    packet["queue_fingerprint"] = queue_fingerprint
+    source_job = packet.get("_source_job") or {}
+    source = packet.get("source_specimen") or {}
+    card = source.get("card_id") or packet.get("request_id")
+    safe_card = re.sub(r"[^A-Za-z0-9_-]", "_", str(card))
+    candidates = []
+    refs = packet.get("reference_photos", {})
+    for group in ("inat", "wikimedia_commons"):
+        candidates.extend(refs.get(group, []))
+    for item in candidates:
+        item["bundle_status"] = "LINK_ONLY"
+    image_blobs = []
+    original_verified = False
+    original_link = None
+    original = _find_original_file(service, source_job)
+    expected = source.get("original_sha256")
+    if original:
+        original_link = original.get("webViewLink") or ("https://drive.google.com/open?id=" + original["id"])
+        try:
+            data = _drive_file_bytes(service, original["id"])
+            ext = _image_extension(original.get("mimeType"), data)
+            if ext and expected and hashlib.sha256(data).hexdigest().casefold() == expected.casefold():
+                image_blobs.append(("images/{}_ORIGINAL{}".format(safe_card, ext), data))
+                original_verified = True
+        except Exception:
+            pass
+    for candidate in candidates:
+        if len(image_blobs) >= MIN_PACKET_IMAGES:
+            break
+        data, ext = _download_external_image(candidate)
+        if data and ext:
+            image_blobs.append(("images/reference_{:02d}{}".format(len(image_blobs), ext), data))
+            candidate["bundle_status"] = "IMAGE_INCLUDED"
+        else:
+            candidate["bundle_status"] = "LINK_ONLY_FETCH_OR_FORMAT_UNAVAILABLE"
+    image_index = {
+        "schema": "VNMV1_IMAGE_INGEST_PACKET_V1",
+        "card_id": card,
+        "request_id": packet.get("request_id"),
+        "minimum_image_target": MIN_PACKET_IMAGES,
+        "image_count": len(image_blobs),
+        "original_image_verified": original_verified,
+        "original_sha256_expected": expected,
+        "original_drive_source_url": original_link,
+        "reference_images_included": sum(x.get("bundle_status") == "IMAGE_INCLUDED" for x in candidates),
+        "reference_links_only": sum(x.get("bundle_status") != "IMAGE_INCLUDED" for x in candidates),
+        "image_target_met": len(image_blobs) >= MIN_PACKET_IMAGES,
+        "rights_note": "Reference sources and license metadata are in research_packet.json; verify before reuse.",
+        "images": [
+            {"path": path, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+            for path, data in image_blobs
+        ],
+    }
+    packet["image_packet"] = {
+        "status": "IMAGE_TARGET_MET" if image_index["image_target_met"] and original_verified else "PARTIAL_IMAGES_LINKS_RETAINED",
+        "minimum_image_target": MIN_PACKET_IMAGES,
+        "image_count": len(image_blobs),
+        "original_image_sha256_verified": original_verified,
+        "reference_images_included": image_index["reference_images_included"],
+        "reference_links_only": image_index["reference_links_only"],
+        "shortfall": max(0, MIN_PACKET_IMAGES - len(image_blobs)),
+        "target_met": image_index["image_target_met"] and original_verified,
+    }
+    packet_zip = json.loads(json.dumps(packet))
+    packet_zip.pop("drive_bundle", None)
+    packet_zip.pop("_source_job", None)
+    packet_zip.get("source_specimen", {}).pop("original_drive_file_id", None)
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("research_packet.json", json.dumps(packet_zip, ensure_ascii=False, indent=2))
+        zf.writestr("image_index.json", json.dumps(image_index, ensure_ascii=False, indent=2))
+        for path, data in image_blobs:
+            zf.writestr(path, data)
+    bundle_name = "{}_FEMALE_STAGE_PAIR_IMAGE_PACKET_V1.zip".format(safe_card)
+    media = MediaIoBaseUpload(io.BytesIO(archive.getvalue()), mimetype="application/zip", resumable=True)
+    uploaded = service.files().create(
+        body={"name": bundle_name, "parents": [folder_id]},
+        media_body=media,
+        fields="id,name,webViewLink",
+        supportsAllDrives=True,
+    ).execute()
+    packet["drive_bundle"] = {
+        "status": "UPLOADED_TO_PRIVATE_DRIVE",
+        "file_id": uploaded.get("id"),
+        "file_name": uploaded.get("name", bundle_name),
+        "url": uploaded.get("webViewLink") or ("https://drive.google.com/open?id=" + uploaded["id"]),
+    }
+    source["original_drive_file_id"] = None
+    source["original_image_note"] = (
+        "Original included only if its bytes match the queue SHA-256; otherwise source link retained."
+    )
+    return packet
+
+
+
 def _write_packet(packet: dict, queue_fingerprint: str) -> str:
     os.makedirs("research-output", exist_ok=True)
     request_id = _safe_id(packet.get("request_id", ""))
     path = os.path.join("research-output", f"{request_id}.json")
     packet["queue_fingerprint"] = queue_fingerprint
+    public_packet = json.loads(json.dumps(packet))
+    public_packet.get("source_specimen", {})["original_drive_file_id"] = None
     with open(path, "w", encoding="utf-8") as output:
-        json.dump(packet, output, ensure_ascii=False, indent=2)
+        json.dump(public_packet, output, ensure_ascii=False, indent=2)
         output.write("\n")
     return path
 
@@ -332,6 +488,10 @@ def main() -> int:
             return 0
         stage[0] = "reference_research"
         packet = build_packet(selected["scientific_name"], selected["request_id"], selected)
+        packet["_source_job"] = selected
+        stage[0] = "private_drive_image_packet_upload"
+        packet = _make_and_upload_image_packet(service, packet, queue_fingerprint)
+        packet.pop("_source_job", None)
         packet_path = _write_packet(packet, queue_fingerprint)
     except Exception as exc:
         status = getattr(getattr(exc, "resp", None), "status", None)
@@ -349,7 +509,7 @@ def main() -> int:
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
-    print("PUBLIC_RESEARCH_PACKET_READY_FOR_COMMIT")
+    print("PRIVATE_DRIVE_IMAGE_PACKET_UPLOADED_PUBLIC_METADATA_READY_FOR_COMMIT")
     return 0
 
 
