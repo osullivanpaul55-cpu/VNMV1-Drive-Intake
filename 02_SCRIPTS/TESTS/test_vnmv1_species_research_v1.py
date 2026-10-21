@@ -94,5 +94,18 @@ class SpeciesResearchTests(unittest.TestCase):
         self.assertFalse(packet["source_specimen"]["original_image_embedded_in_public_packet"])
 
 
+    def test_image_bundle_target_is_fourteen(self):
+        self.assertEqual(research.MIN_PACKET_IMAGES, 14)
+
+    def test_image_extension_checks_file_signature(self):
+        self.assertEqual(research._image_extension("image/png", bytes.fromhex("89504e470d0a1a0a") + b"data"), ".png")
+        self.assertEqual(research._image_extension("image/jpeg", bytes.fromhex("ffd8ff") + b"data"), ".jpg")
+        self.assertIsNone(research._image_extension("image/png", b"not an image"))
+
+    def test_external_image_download_rejects_untrusted_host(self):
+        result = research._download_external_image({"image_url": "https://example.com/fake.png"})
+        self.assertEqual(result, (None, None))
+
+
 if __name__ == "__main__":
     unittest.main()
