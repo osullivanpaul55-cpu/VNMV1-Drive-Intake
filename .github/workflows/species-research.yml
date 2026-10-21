@@ -26,10 +26,11 @@ jobs:
         id: config
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          DRIVE_OAUTH_USER_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_USER_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
           PACKET_DRIVE_FOLDER_ID: ${{ secrets.VNMV1_PACKET_DRIVE_FOLDER_ID }}
         run: |
-          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$PACKET_DRIVE_FOLDER_ID" ]]; then
+          if [[ ( -z "$DRIVE_SERVICE_ACCOUNT_JSON" && -z "$DRIVE_OAUTH_USER_JSON" ) || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$PACKET_DRIVE_FOLDER_ID" ]]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Private Drive queue or image-packet destination is not configured."
           else
@@ -62,6 +63,7 @@ jobs:
         if: steps.config.outputs.configured == 'true'
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_OAUTH_USER_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_USER_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
           VNMV1_PACKET_DRIVE_FOLDER_ID: ${{ secrets.VNMV1_PACKET_DRIVE_FOLDER_ID }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
