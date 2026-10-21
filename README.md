@@ -13,9 +13,12 @@ Public runner code for collecting species research into a private Google Drive f
 
 ## Required repository secrets
 
-- `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON`: service-account JSON.
+- `VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, and `VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN`: preferred credentials for a personal My Drive folder.
+- `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON`: optional fallback when OAuth is not configured.
 - `VNMV1_RESEARCH_QUEUE_FILE_ID`: Drive file ID for the JSON queue.
 - `VNMV1_RESEARCH_OUTPUT_FOLDER_ID`: Drive folder ID where packets should be created.
+
+OAuth credentials are preferred because a service account may lack storage quota to create files in a folder shared from a consumer Gmail account. The OAuth account must have Editor access to both Drive locations and grant the `drive` scope.
 
 Enable the Google Drive API for the service-account project and share both the queue file and output folder with the service account email as Editor. The runner uses Drive API write access to read the queue and create private packet files. Keep the queue and output folders restricted.
 
