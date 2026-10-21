@@ -1,4 +1,4 @@
-name: Private species research queue
+name: Species research queue
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: vnmv1-species-research
@@ -17,27 +17,23 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Check private Drive queue configuration
+      - name: Check Drive queue configuration
         id: config
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
-          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
-          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
-          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
-          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: |
-          if [[ -z "$RESEARCH_QUEUE_FILE_ID" || -z "$RESEARCH_OUTPUT_FOLDER_ID" ]] || { [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" ]] && { [[ -z "$DRIVE_OAUTH_CLIENT_ID" ]] || [[ -z "$DRIVE_OAUTH_CLIENT_SECRET" ]] || [[ -z "$DRIVE_OAUTH_REFRESH_TOKEN" ]]; }; }; then
+          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" ]]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Private Drive queue or output folder is not configured."
+            echo "::notice::Private Drive queue is not configured."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout runner code
+      - name: Checkout runner and packet history
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Set up Python
         if: steps.config.outputs.configured == 'true'
@@ -56,24 +52,34 @@ jobs:
           python -m py_compile 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
           PYTHONPATH=02_SCRIPTS/TOOLS python -m unittest discover -s 02_SCRIPTS/TESTS -p "test_vnmv1_species_research_v1.py" -v
 
-      - name: Build the next private Drive research packet
+      - name: Build the next research packet
         if: steps.config.outputs.configured == 'true'
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
-          GDRIVE_OAUTH_CLIENT_ID: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID }}
-          GDRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET }}
-          GDRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
-          RESEARCH_OUTPUT_FOLDER_ID: ${{ secrets.VNMV1_RESEARCH_OUTPUT_FOLDER_ID }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
 
-      - name: Report safe run status
+      - name: Commit packet to public repository
+        if: steps.config.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-output/*.json
+          if git diff --cached --quiet; then
+            echo "No new research packet to commit."
+          else
+            git commit -m "Add next species research packet"
+            git push
+          fi
+
+      - name: Report packet destination
         if: always()
         run: |
           {
             echo "## Species research queue"
             echo
-            echo "Research packet contents and image files are stored in private Drive."
-            echo "Each scheduled run creates at most one packet for the next unprocessed queue item."
-            echo "The built-in ChatGPT ImageGen step still requires a ChatGPT image-generation session."
+            echo "The Drive queue remains private. Research packets are committed to this public repository."
+            echo "Each scheduled run processes at most one new queue item."
+            echo "Reference photos still need visual review. ChatGPT ImageGen runs in a ChatGPT session."
           } >> "$GITHUB_STEP_SUMMARY"
