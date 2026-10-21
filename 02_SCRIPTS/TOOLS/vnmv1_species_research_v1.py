@@ -323,6 +323,14 @@ def main() -> int:
         if status is None:
             status = getattr(exc, "code", None)
         safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
+        if type(exc).__name__ == "RefreshError":
+            safe_detail = "OAUTH_REFRESH_REJECTED"
+            safe_args = " ".join(str(arg) for arg in getattr(exc, "args", ())).lower()
+            for code in ("invalid_grant", "invalid_client", "unauthorized_client",
+                         "invalid_scope", "access_denied", "invalid_request"):
+                if code in safe_args:
+                    safe_detail = f"OAUTH_{code.upper()}"
+                    break
         print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
