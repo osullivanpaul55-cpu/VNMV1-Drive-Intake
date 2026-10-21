@@ -249,15 +249,26 @@ def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: s
 
 
 def main() -> int:
+    stage = "drive_authentication"
     try:
         service = _drive_service()
+        stage = "queue_read"
         job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
+        stage = "reference_research"
         packet = build_packet(job["scientific_name"], job["request_id"])
         packet["queue_fingerprint"] = job["queue_fingerprint"]
+        stage = "output_folder_check_and_packet_write"
         _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
                       job["queue_fingerprint"], packet)
     except Exception as exc:
-        print(f"RESEARCH_BLOCKED: {type(exc).__name__}; private details redacted", file=sys.stderr)
+        # Report only a coarse stage and HTTP status/type. Never log IDs, names,
+        # credentials, request URLs, or Google API response bodies.
+        status = getattr(getattr(exc, "resp", None), "status", None)
+        if status is None:
+            status = getattr(exc, "code", None)
+        safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
+        print(f"RESEARCH_BLOCKED: stage={stage}; {safe_detail}; private details redacted",
+              file=sys.stderr)
         return 2
     print("PRIVATE_SPECIES_RESEARCH_PACKET_SAVED")
     return 0
