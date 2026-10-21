@@ -191,16 +191,33 @@ def build_packet(name: str, request_id: str) -> dict:
 
 
 def _drive_service():
-    raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "")
-    if not raw:
-        raise RuntimeError("Drive service-account secret is missing")
-    try:
-        info = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("Drive service-account secret is invalid") from exc
-    from google.oauth2.service_account import Credentials
+    oauth_client_id = os.environ.get("GDRIVE_OAUTH_CLIENT_ID", "").strip()
+    oauth_client_secret = os.environ.get("GDRIVE_OAUTH_CLIENT_SECRET", "").strip()
+    oauth_refresh_token = os.environ.get("GDRIVE_OAUTH_REFRESH_TOKEN", "").strip()
     from googleapiclient.discovery import build
-    creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+
+    if oauth_client_id and oauth_client_secret and oauth_refresh_token:
+        # OAuth writes into the authenticated person's My Drive and uses their
+        # Drive quota, which is required for personal Gmail accounts.
+        from google.oauth2.credentials import Credentials
+        creds = Credentials(
+            token=None,
+            refresh_token=oauth_refresh_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=oauth_client_id,
+            client_secret=oauth_client_secret,
+            scopes=SCOPES,
+        )
+    else:
+        raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "")
+        if not raw:
+            raise RuntimeError("Google Drive OAuth credentials or service-account JSON are required")
+        try:
+            info = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Drive service-account secret is invalid") from exc
+        from google.oauth2.service_account import Credentials
+        creds = Credentials.from_service_account_info(info, scopes=SCOPES)
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
@@ -235,29 +252,51 @@ def _read_queue(service, file_id: str) -> dict:
     }
 
 
-def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict) -> None:
+def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict, set_stage) -> None:
     from googleapiclient.http import MediaIoBaseUpload
     name = f"RESEARCH_PACKET_{request_id}_{queue_fingerprint}.json"
+    set_stage("output_folder_metadata_check")
+    folder = service.files().get(fileId=folder_id,
+        fields="mimeType,driveId,capabilities(canAddChildren)", supportsAllDrives=True).execute()
+    can_add_children = (folder.get("capabilities") or {}).get("canAddChildren")
+    print("OUTPUT_FOLDER_CHECK: accessible=true; is_folder="
+          + str(folder.get("mimeType") == "application/vnd.google-apps.folder").lower()
+          + "; can_add_children=" + str(can_add_children).lower()
+          + "; shared_drive=" + str(bool(folder.get("driveId"))).lower()
+          )
     query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
+    set_stage("output_folder_lookup")
     existing = service.files().list(q=query, pageSize=10, fields="files(id)").execute().get("files", [])
     if existing:
         return
     media = MediaIoBaseUpload(io.BytesIO(json.dumps(packet, ensure_ascii=False, indent=2).encode()),
                               mimetype="application/json", resumable=False)
+    set_stage("packet_create")
     service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
-                           media_body=media, fields="id").execute()
+                           media_body=media, fields="id", supportsAllDrives=True).execute()
 
 
 def main() -> int:
+    stage = ["drive_authentication"]
+    set_stage = lambda value: stage.__setitem__(0, value)
     try:
         service = _drive_service()
+        set_stage("queue_read")
         job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
+        set_stage("reference_research")
         packet = build_packet(job["scientific_name"], job["request_id"])
         packet["queue_fingerprint"] = job["queue_fingerprint"]
         _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
-                      job["queue_fingerprint"], packet)
+                      job["queue_fingerprint"], packet, set_stage)
     except Exception as exc:
-        print(f"RESEARCH_BLOCKED: {type(exc).__name__}; private details redacted", file=sys.stderr)
+        # Report only a coarse stage and HTTP status/type. Never log IDs, names,
+        # credentials, request URLs, or Google API response bodies.
+        status = getattr(getattr(exc, "resp", None), "status", None)
+        if status is None:
+            status = getattr(exc, "code", None)
+        safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
+        print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
+              file=sys.stderr)
         return 2
     print("PRIVATE_SPECIES_RESEARCH_PACKET_SAVED")
     return 0
