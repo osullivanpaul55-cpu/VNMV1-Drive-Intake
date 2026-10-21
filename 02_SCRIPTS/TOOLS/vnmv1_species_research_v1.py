@@ -235,31 +235,33 @@ def _read_queue(service, file_id: str) -> dict:
     }
 
 
-def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict) -> None:
+def _write_packet(service, folder_id: str, request_id: str, queue_fingerprint: str, packet: dict, set_stage) -> None:
     from googleapiclient.http import MediaIoBaseUpload
     name = f"RESEARCH_PACKET_{request_id}_{queue_fingerprint}.json"
     query = f"name = '{name}' and '{folder_id}' in parents and trashed = false"
+    set_stage("output_folder_lookup")
     existing = service.files().list(q=query, pageSize=10, fields="files(id)").execute().get("files", [])
     if existing:
         return
     media = MediaIoBaseUpload(io.BytesIO(json.dumps(packet, ensure_ascii=False, indent=2).encode()),
                               mimetype="application/json", resumable=False)
+    set_stage("packet_create")
     service.files().create(body={"name": name, "mimeType": "application/json", "parents": [folder_id]},
                            media_body=media, fields="id").execute()
 
 
 def main() -> int:
-    stage = "drive_authentication"
+    stage = ["drive_authentication"]
+    set_stage = lambda value: stage.__setitem__(0, value)
     try:
         service = _drive_service()
-        stage = "queue_read"
+        set_stage("queue_read")
         job = _read_queue(service, os.environ["RESEARCH_QUEUE_FILE_ID"])
-        stage = "reference_research"
+        set_stage("reference_research")
         packet = build_packet(job["scientific_name"], job["request_id"])
         packet["queue_fingerprint"] = job["queue_fingerprint"]
-        stage = "output_folder_check_and_packet_write"
         _write_packet(service, os.environ["RESEARCH_OUTPUT_FOLDER_ID"], job["request_id"],
-                      job["queue_fingerprint"], packet)
+                      job["queue_fingerprint"], packet, set_stage)
     except Exception as exc:
         # Report only a coarse stage and HTTP status/type. Never log IDs, names,
         # credentials, request URLs, or Google API response bodies.
@@ -267,7 +269,7 @@ def main() -> int:
         if status is None:
             status = getattr(exc, "code", None)
         safe_detail = f"HTTP_{status}" if isinstance(status, int) else type(exc).__name__
-        print(f"RESEARCH_BLOCKED: stage={stage}; {safe_detail}; private details redacted",
+        print(f"RESEARCH_BLOCKED: stage={stage[0]}; {safe_detail}; private details redacted",
               file=sys.stderr)
         return 2
     print("PRIVATE_SPECIES_RESEARCH_PACKET_SAVED")
