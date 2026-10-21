@@ -1,26 +1,23 @@
 # VNMV1 Drive Intake
 
-Public runner code for collecting species research into a private Google Drive folder. It does not publish queue contents, card IDs, specimen images, or research packets to GitHub.
+Public GitHub Actions runner for a private Google Drive research queue. The queue and credentials stay private; source-linked research packets are committed to this public repository.
 
 ## Research workflow
 
 - GitHub Actions checks the configured Drive queue every 15 minutes and can also be started manually.
-- A queue may be one JSON object, a JSON array, or an object with a `jobs` array. Each item needs a unique `request_id` and `scientific_name`.
-- Each run creates at most one packet for the first queue item without a matching packet in the output folder. The next scheduled run continues with the next item. Existing packets are not duplicated.
-- Packets include candidate taxonomic matches, source-linked licensed-photo metadata, two appearance groups awaiting visual evidence review, and a 12-view plan. Research candidates are not treated as confirmed specimen identifications.
-- The workflow does not download/visually inspect reference photos and cannot call built-in ChatGPT ImageGen. In ChatGPT, inspect the referenced images, record supported appearance differences, then generate, review, and refine the 12 images. Keep each approved image and review notes in private Drive.
-- Public Actions runs are free within GitHub's current public-repository policy. Google Drive API quotas and ChatGPT image generation remain subject to their respective limits.
+- The queue can be one JSON object, a JSON array, or an object with a `jobs` array. Each item needs a unique `request_id` and `scientific_name`.
+- Each run handles at most one item without a matching `research-output/<request_id>.json` packet. The next scheduled run continues with the next item. Committed packets are not duplicated.
+- Packets include candidate taxonomy matches, source-linked licensed-photo metadata, two appearance groups awaiting visual evidence review, and a 12-view plan. Candidate matches are not confirmed specimen identification.
+- The Drive queue is read-only from Actions and stays restricted. Research packets are public in this repository, including request IDs and species names. Do not place private personal data in the queue.
+- The runner does not download or visually inspect references and cannot invoke built-in ChatGPT ImageGen. In ChatGPT, inspect reference images, record supported appearance differences, then generate, review, and refine images. Keep generated image assets and image review notes in Drive.
+- Public Actions runners are free within GitHub's current public-repository policy. Google Drive API quotas and ChatGPT image generation remain subject to their respective limits.
 
 ## Required repository secrets
 
-- `VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `VNMV1_GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, and `VNMV1_GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN`: preferred credentials for a personal My Drive folder.
-- `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON`: optional fallback when OAuth is not configured.
+- `VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON`: service-account JSON, with read access to the queue file.
 - `VNMV1_RESEARCH_QUEUE_FILE_ID`: Drive file ID for the JSON queue.
-- `VNMV1_RESEARCH_OUTPUT_FOLDER_ID`: Drive folder ID where packets should be created.
 
-OAuth credentials are preferred because a service account may lack storage quota to create files in a folder shared from a consumer Gmail account. The OAuth account must have Editor access to both Drive locations and grant the `drive` scope.
-
-Enable the Google Drive API for the service-account project and share both the queue file and output folder with the service account email as Editor. The runner uses Drive API write access to read the queue and create private packet files. Keep the queue and output folders restricted.
+Enable the Drive API for the service-account project and share the queue file or its containing folder with the service account as Viewer. No Drive write permission, OAuth refresh token, output folder, or user storage quota is needed.
 
 ## Queue example
 
@@ -33,4 +30,4 @@ Enable the Google Drive API for the service-account project and share both the q
 }
 ```
 
-Only add entries whose card identity and species name have been reconciled against the authoritative roster. The current roster audit contains unresolved membership, so do not bulk-queue all 526 cards until those identities are confirmed.
+Only add entries whose card identity and scientific name have been reconciled against the authoritative roster. The current roster audit contains unresolved membership, so do not bulk-queue all 526 cards until those identities are confirmed.
