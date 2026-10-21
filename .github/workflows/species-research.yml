@@ -27,10 +27,11 @@ jobs:
         env:
           DRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
+          PACKET_DRIVE_FOLDER_ID: ${{ secrets.VNMV1_PACKET_DRIVE_FOLDER_ID }}
         run: |
-          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" ]]; then
+          if [[ -z "$DRIVE_SERVICE_ACCOUNT_JSON" || -z "$RESEARCH_QUEUE_FILE_ID" || -z "$PACKET_DRIVE_FOLDER_ID" ]]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Private Drive queue is not configured."
+            echo "::notice::Private Drive queue or image-packet destination is not configured."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -62,6 +63,7 @@ jobs:
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.VNMV1_GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON }}
           RESEARCH_QUEUE_FILE_ID: ${{ secrets.VNMV1_RESEARCH_QUEUE_FILE_ID }}
+          VNMV1_PACKET_DRIVE_FOLDER_ID: ${{ secrets.VNMV1_PACKET_DRIVE_FOLDER_ID }}
         run: python 02_SCRIPTS/TOOLS/vnmv1_species_research_v1.py
 
       - name: Commit packet to public repository
@@ -84,7 +86,7 @@ jobs:
           {
             echo "## Species research queue"
             echo
-            echo "The Drive queue remains private. Research packets are committed to this public repository."
-            echo "Each scheduled run processes at most one new queue item."
-            echo "Reference photos still need visual review. ChatGPT ImageGen runs in a ChatGPT session."
+            echo "Image ZIP packets go to the configured private Drive folder; only research JSON metadata is committed here."
+            echo "Each scheduled run processes at most one new card."
+            echo "Packets target 14 bundled images and retain source links when images cannot be bundled. ChatGPT ImageGen still runs in a ChatGPT session."
           } >> "$GITHUB_STEP_SUMMARY"
