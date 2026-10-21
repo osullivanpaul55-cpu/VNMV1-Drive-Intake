@@ -165,6 +165,7 @@ def build_packet(name: str, request_id: str, specimen_context: dict | None = Non
             "original_match_method": specimen_context.get("original_match_method"),
             "original_match_confidence": specimen_context.get("original_match_confidence"),
             "taxon_input_status": specimen_context.get("identity_input_status", "UNASSESSED_CANDIDATE_INPUT"),
+            "taxon_input_note": specimen_context.get("taxon_input_note"),
             "sex_default": "FEMALE",
             "sex_default_basis": "USER_ASSUMPTION_FOR_PACKETING",
             "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
@@ -291,6 +292,7 @@ def _read_queue(service, file_id: str) -> tuple[list[dict], str]:
             "original_match_method": job.get("original_match_method"),
             "original_match_confidence": job.get("original_match_confidence"),
             "identity_input_status": job.get("identity_input_status", "UNASSESSED_CANDIDATE_INPUT"),
+            "taxon_input_note": job.get("taxon_input_note"),
             "queue_fingerprint": hashlib.sha256(
                 json.dumps(job, sort_keys=True, ensure_ascii=False).encode("utf-8")
             ).hexdigest()[:12],
