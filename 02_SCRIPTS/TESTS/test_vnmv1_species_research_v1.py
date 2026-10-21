@@ -1,5 +1,7 @@
+import io
 import sys
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,6 +10,24 @@ import vnmv1_species_research_v1 as research
 
 
 class SpeciesResearchTests(unittest.TestCase):
+    def test_failure_log_reports_stage_and_status_without_exception_details(self):
+        class FakeResponse:
+            status = 403
+
+        class FakeDriveError(Exception):
+            resp = FakeResponse()
+
+        stderr = io.StringIO()
+        with patch.object(research, "_drive_service",
+                          side_effect=FakeDriveError("private file id and response body")), \
+             redirect_stderr(stderr):
+            result = research.main()
+
+        self.assertEqual(result, 2)
+        self.assertIn("stage=drive_authentication; HTTP_403", stderr.getvalue())
+        self.assertNotIn("private file id", stderr.getvalue())
+        self.assertNotIn("response body", stderr.getvalue())
+
     def test_gbif_match_preserves_authority_warning(self):
         with patch.object(research, "fetch_json", return_value={
             "scientificName": "Testa specimen", "canonicalName": "Testa specimen",
