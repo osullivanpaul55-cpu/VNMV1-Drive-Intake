@@ -5,7 +5,7 @@ Public GitHub Actions runner for a private Google Drive research queue. The queu
 ## Research workflow
 
 - GitHub Actions checks the configured Drive queue every 15 minutes and can also be started manually.
-- The queue can be one JSON object, a JSON array, or an object with a `jobs` array. Each item needs a unique `request_id` and `scientific_name`.
+- The queue can be one JSON object, a JSON array, or an object with a `jobs` array. Each item needs a unique `request_id` and `scientific_name`. Card-linked jobs should also carry `card_id`, `original_drive_file_id`, `original_sha256`, and `original_filename` so the public packet can be bound back to the private original.
 - Each run handles at most one item without a matching `research-output/<request_id>.json` packet. The next scheduled run continues with the next item. Committed packets are not duplicated.
 - Packets include candidate taxonomy matches, source-linked licensed-photo metadata, two appearance groups awaiting visual evidence review, and a 12-view plan. Candidate matches are not confirmed specimen identification.
 - The Drive queue is read-only from Actions and stays restricted. Research packets are public in this repository, including request IDs and species names. Do not place private personal data in the queue.
