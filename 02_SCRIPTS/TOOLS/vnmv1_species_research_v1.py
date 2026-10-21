@@ -196,19 +196,10 @@ def _drive_service():
     oauth_refresh_token = os.environ.get("GDRIVE_OAUTH_REFRESH_TOKEN", "").strip()
     from googleapiclient.discovery import build
 
-    raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
-    if raw:
-        # Prefer service-account auth when configured. OAuth secrets remain as
-        # a fallback for environments where service accounts cannot be used.
-        try:
-            info = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise RuntimeError("Drive service-account secret is invalid") from exc
-        from google.oauth2.service_account import Credentials
-        creds = Credentials.from_service_account_info(info, scopes=SCOPES)
-    elif oauth_client_id and oauth_client_secret and oauth_refresh_token:
-        # OAuth writes into the authenticated person's My Drive and uses their
-        # Drive quota, which is required for personal Gmail accounts.
+    # Prefer the user's OAuth identity for personal My Drive folders. Google
+    # service accounts have no personal storage quota and may be unable to add
+    # files to folders shared from a consumer Gmail account.
+    if oauth_client_id and oauth_client_secret and oauth_refresh_token:
         from google.oauth2.credentials import Credentials
         creds = Credentials(
             token=None,
@@ -219,7 +210,15 @@ def _drive_service():
             scopes=SCOPES,
         )
     else:
-        raise RuntimeError("Google Drive service-account JSON or OAuth credentials are required")
+        raw = os.environ.get("GDRIVE_SERVICE_ACCOUNT_JSON", "").strip()
+        if not raw:
+            raise RuntimeError("Google Drive OAuth or service-account credentials are required")
+        try:
+            info = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Drive service-account secret is invalid") from exc
+        from google.oauth2.service_account import Credentials
+        creds = Credentials.from_service_account_info(info, scopes=SCOPES)
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
