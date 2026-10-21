@@ -366,7 +366,12 @@
     "photographed_individual_sex": "UNKNOWN_UNVERIFIED",
     "photographed_individual_life_stage": "UNKNOWN_UNVERIFIED",
     "original_image_embedded_in_public_packet": false,
-    "original_image_note": "Original image remains in private Drive; this packet stores its source binding only."
+    "original_image_note": "Original image remains in private Drive; this packet stores its source binding only.",
+    "original_manifest_status": "PROVEN",
+    "original_match_method": "SIDECAR_SPECIMEN_PATH",
+    "original_match_confidence": "HIGH",
+    "taxon_input_status": "ACCEPTED_NAME_MAPPED_FOR_RESEARCH",
+    "taxon_input_note": "Source spelling 'Abdomegaphobema mesmolas' corrected to the accepted name for research; the photographed individual's identity still requires review."
   },
   "closeup_plan": {
     "target_image_count": 6,
